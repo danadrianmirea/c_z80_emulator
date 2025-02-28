@@ -1,0 +1,8 @@
+{
+    "makefile.configurations": [
+        {
+            "name": "Default",
+            "makefilePath": "${workspaceFolder}/Makefile"
+        }
+    ]
+}
