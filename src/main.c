@@ -14,7 +14,7 @@ void input_handle() {}
 
 int main() {
   bool romLoaded = load_rom("48.rom");
-  if(romLoaded==false)
+  if (romLoaded == false)
   {
     printf("Error: Unable to load 48.rom, exiting\n");
     return RETCODE_ROM_LOADING_FAILED;
