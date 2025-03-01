@@ -10,7 +10,6 @@ set(SOURCES
 # List header files (optional, for IDE support)
 set(HEADERS
     cpu.h
-    memory.h
     zx_spectrum.h
 )
 
@@ -20,6 +19,14 @@ add_executable(zx_emulator ${SOURCES} ${HEADERS})
 # Include directories
 target_include_directories(zx_emulator PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
-# Link libraries (SDL2)
+# Find SDL2 and its components
 find_package(SDL2 REQUIRED)
-target_link_libraries(zx_emulator PRIVATE SDL2::SDL2 SDL2::SDL2_ttf SDL2::SDL2_image)
+find_package(SDL2_ttf REQUIRED)
+find_package(SDL2_image REQUIRED)
+
+# Link SDL2 and its components
+target_link_libraries(zx_emulator PRIVATE 
+    SDL2::SDL2 
+    SDL2_ttf::SDL2_ttf 
+    SDL2_image::SDL2_image
+)
