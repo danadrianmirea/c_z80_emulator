@@ -35,8 +35,8 @@ extern uint8_t a, f, b, c, d, e, h, l;
 extern uint8_t memory[MEM_SIZE];
 
 bool load_rom(const char* filename);
-void cpu_init();
-void cpu_step();
+void z80_init();
+void z80_step();
 void display_update();
 void input_handle();
 #endif /* ZX_SPECTRUM_H */

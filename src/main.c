@@ -20,9 +20,9 @@ int main() {
     return RETCODE_ROM_LOADING_FAILED;
   }
 
-  cpu_init();
+  z80_init();
   while (1) {
-    cpu_step();
+    z80_step();
     display_update();
     input_handle();
   }

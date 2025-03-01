@@ -27,9 +27,9 @@ uint8_t a, f, b, c, d, e, h, l;
 #define DE ( (d << 8) | e )
 #define HL ( (h << 8) | l )
 
-void cpu_init() {}
+void z80_init() {}
 
-void cpu_step(uint8_t* memory) {
+void z80_step(uint8_t* memory) {
   uint8_t opcode = MEM(pc++);
 
   switch (opcode) {
