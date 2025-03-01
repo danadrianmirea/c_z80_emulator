@@ -6,7 +6,6 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-
 #include "cpu.h"
 #include "memory.h"
 
@@ -16,7 +15,6 @@
 #define MEM_SIZE 65536
 #define SCREEN_WIDTH 256
 #define SCREEN_HEIGHT 192
-
 
 // Flag update macros
 #define UPDATE_FLAGS_ADD(result, operand) \
@@ -33,11 +31,8 @@
     if(((operand) & 0x0F) > (a & 0x0F)) SET_FLAG(FLAG_H); \
     if((operand) > a) SET_FLAG(FLAG_C);
 
-extern uint16_t pc, sp;
-extern uint8_t a, f, b, c, d, e, h, l;
-extern uint8_t memory[MEM_SIZE];
-
 bool load_rom(const char* filename);
+bool load_z80_snapshot(const char* filename);
 void display_update();
 void input_handle();
 #endif /* ZX_SPECTRUM_H */

@@ -4,5 +4,8 @@
             "name": "Default",
             "makefilePath": "${workspaceFolder}/Makefile"
         }
-    ]
+    ],
+    "files.associations": {
+        "iosfwd": "cpp"
+    }
 }
