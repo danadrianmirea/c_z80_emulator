@@ -20,6 +20,21 @@
 #define SCREEN_WIDTH 256
 #define SCREEN_HEIGHT 192
 
+enum RETURN_CODES
+{
+    RETCODE_NO_ERROR = 0,
+    RETCODE_ROM_LOADING_FAILED,
+    RETCODE_Z80_SNAPSHOT_LOADING_FAILED
+};
+
+
+enum Z80_VERSION
+{
+    Z80_VERSION_1 = 1,
+    Z80_VERSION_2,
+    Z80_VERSION_3
+};
+
 // Flag update macros
 #define UPDATE_FLAGS_ADD(result, operand) \
     CLR_FLAG(FLAG_Z | FLAG_S | FLAG_H | FLAG_C); \

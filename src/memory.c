@@ -46,105 +46,94 @@ bool load_z80_snapshot(const char* filename) {
     return false;
   }
 
-  // Read and verify header (30 bytes for version 1)
-  uint8_t header[30];
+  // Read main header (at least 30 bytes)
+  uint8_t header[58];
   if (fread(header, 1, 30, file) != 30) {
-    fprintf(stderr, "Invalid Z80 header\n");
     fclose(file);
     return false;
   }
 
-  // Check for version 1 format (PC != 0)
+  // Detect version (byte 29/0x1D)
+  int version = 1;
+  if (header[29] == 23 || header[29] == 54) version = 2;
+
+  // Read extended header for version 2/3
+  if (version >= 2) {
+    if (fread(&header[30], 1, 28, file) != 28) {
+      fclose(file);
+      return false;
+    }
+  }
+
+  // Handle different version formats
   uint16_t pc = (header[7] << 8) | header[6];
-  if (pc == 0) {
-    fprintf(stderr, "Only version 1 Z80 files are supported\n");
-    fclose(file);
-    return false;
+  bool compressed = false;
+  size_t data_offset = 30;
+
+  if (version >= 2) {
+    // Version 2+ specific handling
+    compressed = (header[34] & 0x20); // Compression flag in extended header
+    data_offset = 32 + header[30];    // Skip additional headers
+    pc = (header[33] << 8) | header[32];
+  }
+  else {
+    // Original version 1 handling
+    compressed = (header[12] & 0x20);
   }
 
-  // Check compression flag (bit 5 of byte 12)
-  bool compressed = (header[12] & 0x20) != 0;
-
-  // Read compressed data
+  // Get RAM data
   fseek(file, 0, SEEK_END);
   long file_size = ftell(file);
-  fseek(file, 30, SEEK_SET);
-  long data_size = file_size - 30;
-
-  if (data_size <= 0) {
-    fprintf(stderr, "Invalid Z80 data block\n");
-    fclose(file);
-    return false;
-  }
+  fseek(file, data_offset, SEEK_SET);
+  long data_size = file_size - data_offset;
 
   uint8_t* data = malloc(data_size);
   if (!data || fread(data, 1, data_size, file) != data_size) {
-    fprintf(stderr, "Failed to read snapshot data\n");
     free(data);
     fclose(file);
     return false;
   }
   fclose(file);
 
-  // Prepare memory writing
-  size_t dest_idx = 0x4000;  // Start of Spectrum RAM
-  const size_t ram_size = 0xC000;  // 48KB
+  // Handle different memory models
+  size_t dest_idx = 0x4000;  // Standard 48K Spectrum RAM start
+  size_t ram_size = 0xC000;   // 48K RAM size
 
   if (!compressed) {
-    // Direct copy for uncompressed data
+    // Simple memory copy for uncompressed data
     if (data_size != ram_size) {
-      fprintf(stderr, "Invalid RAM size: %ld (expected %zu)\n", data_size, ram_size);
+      fprintf(stderr, "Unexpected RAM size: %ld (expected %zu)\n",
+        data_size, ram_size);
       free(data);
       return false;
     }
     memcpy(&memory[dest_idx], data, ram_size);
   }
   else {
-    // Decompress RLE data
+    // Enhanced decompression handling
     size_t src_idx = 0;
     while (src_idx < data_size && dest_idx < (0x4000 + ram_size)) {
-      uint8_t b1 = data[src_idx++];
+      if (data[src_idx] == 0xED && (src_idx + 1 < data_size) && data[src_idx + 1] == 0xED) {
+        // Compressed block
+        src_idx += 2;
+        if (src_idx + 1 >= data_size) break;
 
-      if (b1 == 0xED && src_idx < data_size) {
-        uint8_t b2 = data[src_idx++];
-        if (b2 == 0xED && src_idx + 1 < data_size) {
-          // RLE compressed block
-          uint8_t count = data[src_idx++];
-          uint8_t value = data[src_idx++];
-          if (count == 0) count = 256;
+        uint8_t count = data[src_idx++];
+        uint8_t value = data[src_idx++];
 
-          if (dest_idx + count > (0x4000 + ram_size)) {
-            fprintf(stderr, "RLE overflow at 0x%zX\n", dest_idx);
-            free(data);
-            return false;
-          }
-          memset(&memory[dest_idx], value, count);
-          dest_idx += count;
-        }
-        else {
-          // Literal ED sequence
-          if (dest_idx + 1 > (0x4000 + ram_size)) break;
-          memory[dest_idx++] = 0xED;
-          memory[dest_idx++] = b2;
-        }
+        if (count == 0) count = 256;
+        memset(&memory[dest_idx], value, count);
+        dest_idx += count;
       }
       else {
-        // Single byte
-        if (dest_idx >= (0x4000 + ram_size)) break;
-        memory[dest_idx++] = b1;
+        // Uncompressed byte
+        memory[dest_idx++] = data[src_idx++];
       }
-    }
-
-    if (dest_idx != (0x4000 + ram_size)) {
-      fprintf(stderr, "Decompression incomplete: %zu/%zu bytes\n",
-        dest_idx - 0x4000, ram_size);
-      free(data);
-      return false;
     }
   }
 
   free(data);
-  printf("Z80 snapshot loaded successfully\n");
+  printf("Successfully loaded Z80 snapshot (version %d)\n", version);
   return true;
 }
 

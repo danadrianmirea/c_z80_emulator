@@ -2,12 +2,6 @@
 #include "zx_spectrum.h"
 #include <stdio.h>
 
-enum RETURN_CODES
-{
-  RETCODE_NO_ERROR = 0,
-  RETCODE_ROM_LOADING_FAILED,
-  RETCODE_Z80_SNAPSHOT_LOADING_FAILED
-};
 
 void display_update() {}
 
@@ -17,13 +11,17 @@ int main() {
   Z80_State z80_state;
   z80_init(&z80_state);
 
-  if (!load_rom("48.rom"))
+  const char* romName = "48.rom";
+  //const char* z80Name = "deathchase.z80";
+  const char* z80Name = "mm2000.z80";
+
+  if (!load_rom(romName))
   {
     printf("Error: Unable to load rom, exiting\n");
     return RETCODE_ROM_LOADING_FAILED;
   }
 
-  if (!load_z80_snapshot("MM-2000.z80")) {
+  if (!load_z80_snapshot(z80Name)) {
     printf("Error: Unable to load Z80 Snapshot, exiting\n");
     return RETCODE_Z80_SNAPSHOT_LOADING_FAILED;
   }
