@@ -9,10 +9,14 @@
 #include "cpu.h"
 #include "memory.h"
 
-#define SPECTRUM_ROM_SIZE 16384  // 16KB
-#define ROM_START 0x0000U
-#define ROM_END 0x3FFFU        // 16KB ROM area
 #define MEM_SIZE 65536
+#define ROM_START 0x0000
+#define ROM_END 0x3FFF   // 16KB ROM area
+#define RAM_START 0x4000
+#define RAM_END 0xFFFF
+#define ROM_SIZE 0x4000  // 16KB
+#define RAM_SIZE 0xC000  // 48KB
+
 #define SCREEN_WIDTH 256
 #define SCREEN_HEIGHT 192
 

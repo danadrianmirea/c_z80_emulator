@@ -5,7 +5,8 @@
 enum RETURN_CODES
 {
   RETCODE_NO_ERROR = 0,
-  RETCODE_ROM_LOADING_FAILED
+  RETCODE_ROM_LOADING_FAILED,
+  RETCODE_Z80_SNAPSHOT_LOADING_FAILED
 };
 
 void display_update() {}
@@ -13,16 +14,20 @@ void display_update() {}
 void input_handle() {}
 
 int main() {
-  bool romLoaded = load_rom("48.rom");
-  if (romLoaded == false)
+  Z80_State z80_state;
+  z80_init(&z80_state);
+
+  if (!load_rom("48.rom"))
   {
-    printf("Error: Unable to load 48.rom, exiting\n");
+    printf("Error: Unable to load rom, exiting\n");
     return RETCODE_ROM_LOADING_FAILED;
   }
 
-  Z80_State z80_state;
+  if (!load_z80_snapshot("MM-2000.z80")) {
+    printf("Error: Unable to load Z80 Snapshot, exiting\n");
+    return RETCODE_Z80_SNAPSHOT_LOADING_FAILED;
+  }
 
-  z80_init(&z80_state);
   while (1) {
     z80_step(&z80_state);
     display_update();
