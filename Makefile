@@ -4,8 +4,8 @@ CFLAGS = -Wall -Wextra -std=c99 -I$(INCLUDE_DIRS)
 LDFLAGS = -lSDL2 -lSDL2_ttf -lSDL2_image
 
 # MSYS2 UCRT64 paths
-INCLUDE_DIRS = C:/msys64/ucrt64/include
-LIB_DIRS = C:/msys64/ucrt64/lib
+INCLUDE_DIRS = C:/msys64/ucrt64/include;D:/msys64/ucrt64/include
+LIB_DIRS = C:/msys64/ucrt64/lib;D:/msys64/ucrt64/lib
 
 SRC_DIR = src
 OBJ_DIR = obj
