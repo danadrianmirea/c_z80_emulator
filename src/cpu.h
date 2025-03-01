@@ -50,8 +50,8 @@ typedef struct {
 } while(0)
 
 // Memory interface
-uint8_t mem_read(uint16_t addr);
-void mem_write(uint16_t addr, uint8_t val);
+uint8_t mem_read(uint32_t addr);
+void mem_write(uint32_t addr, uint8_t val);
 
 // Core functions
 void z80_init(Z80_State* state);

@@ -19,6 +19,8 @@
 
 #define SCREEN_WIDTH 256
 #define SCREEN_HEIGHT 192
+#define SCALE_FACTOR 2
+
 
 enum RETURN_CODES
 {

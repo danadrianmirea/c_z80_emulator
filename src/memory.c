@@ -118,8 +118,8 @@ bool load_z80_snapshot(const char* filename) {
         src_idx += 2;
         if (src_idx + 1 >= data_size) break;
 
-        uint8_t count = data[src_idx++];
-        uint8_t value = data[src_idx++];
+        uint16_t count = data[src_idx++];
+        uint16_t value = data[src_idx++];
 
         if (count == 0) count = 256;
         memset(&memory[dest_idx], value, count);
@@ -137,11 +137,11 @@ bool load_z80_snapshot(const char* filename) {
   return true;
 }
 
-uint8_t mem_read(uint16_t addr) {
+uint8_t mem_read(uint32_t addr) {
   return memory[addr];
 }
 
-void mem_write(uint16_t addr, uint8_t value) {
-  if (addr >= ROM_START && addr <= ROM_END) return;
+void mem_write(uint32_t addr, uint8_t value) {
+  if (addr >= MEM_SIZE) return;
   memory[addr] = value;
 }
