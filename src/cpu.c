@@ -1,93 +1,122 @@
-// cpu.c
 #include "zx_spectrum.h"
-#include <stdint.h>
+#include "cpu.h"
+#include <stdio.h>
 
-uint16_t pc, sp;
-uint8_t a, f, b, c, d, e, h, l;
+// Precomputed parity table (even parity)
+static const uint8_t parity_table[256] = {
+    1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,
+    0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,
+    0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,
+    1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,
+    0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,
+    1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,
+    1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,
+    0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1
+};
 
-// Flag bit positions
-#define FLAG_C 0x01  // Carry
-#define FLAG_N 0x02  // Add/Subtract
-#define FLAG_PV 0x04 // Parity/Overflow
-#define FLAG_H 0x10  // Half Carry
-#define FLAG_Z 0x40  // Zero
-#define FLAG_S 0x80  // Sign
+void z80_init(Z80_State* state) {
+  state->pc = 0x0000;
+  state->sp = 0xFFFF;
+  state->iff1 = state->iff2 = 0;
+  state->imode = 0;
+}
 
-// Helper macros for flag operations
-#define SET_FLAG(bit) (f |= (bit))
-#define CLR_FLAG(bit) (f &= ~(bit))
-#define TST_FLAG(bit) (f & (bit))
+static void add_a(Z80_State* state, uint8_t val) {
+  uint16_t res = state->a + val;
+  uint8_t carry = (res > 0xFF) ? FLAG_C : 0;
 
-// Memory access shorthand
-#define MEM(addr) memory[addr]
-#define MEM_WORD(addr) (memory[addr] | (memory[addr+1] << 8))
+  CLR_FLAG(state, FLAG_N | FLAG_C | FLAG_H);
+  SET_FLAG(state, carry);
+  if (((state->a & 0x0F) + (val & 0x0F)) > 0x0F) SET_FLAG(state, FLAG_H);
 
-// Register pairs
-#define BC ( (b << 8) | c )
-#define DE ( (d << 8) | e )
-#define HL ( (h << 8) | l )
+  state->a = res & 0xFF;
+  UPDATE_SZP(state, state->a);
+}
 
-void z80_init() {}
+static void sub_a(Z80_State* state, uint8_t val) {
+  uint16_t res = state->a - val;
+  uint8_t carry = (res > 0xFF) ? FLAG_C : 0;
 
-void z80_step(uint8_t* memory) {
-  uint8_t opcode = MEM(pc++);
+  SET_FLAG(state, FLAG_N);
+  CLR_FLAG(state, FLAG_C | FLAG_H);
+  SET_FLAG(state, carry);
+  if (((state->a & 0x0F) - (val & 0x0F)) & 0x10) SET_FLAG(state, FLAG_H);
+
+  state->a = res & 0xFF;
+  UPDATE_SZP(state, state->a);
+}
+
+int z80_step(Z80_State* state) {
+  uint8_t opcode = mem_read(state->pc++);
 
   switch (opcode) {
-    // 8-bit Loads
+    // 8-bit Load Group
   case 0x06: // LD B,n
-    b = MEM(pc++);
+    state->b = mem_read(state->pc++);
     break;
 
   case 0x0E: // LD C,n
-    c = MEM(pc++);
+    state->c = mem_read(state->pc++);
     break;
 
-  case 0x32: { // LD (nn),A
-    uint16_t addr = MEM_WORD(pc);
-    pc += 2;
-    MEM(addr) = a;
-    break;
-  }
-
-           // 8 bit ALU
+    // 8-bit Arithmetic Group
   case 0x80: // ADD A,B
-    a += b;
-    CLR_FLAG(FLAG_N);
-    // Set Z, S, H, C flags
-    UPDATE_FLAGS_ADD(a, b);
+    add_a(state, state->b);
     break;
 
   case 0x90: // SUB B
-    a -= b;
-    SET_FLAG(FLAG_N);
-    UPDATE_FLAGS_SUB(a, b);
+    sub_a(state, state->b);
     break;
 
-    // Jumps
-  case 0xC3: { // JP nn
-    pc = MEM_WORD(pc);
+    // 8-bit Logical Group
+  case 0xA0: // AND B
+    state->a &= state->b;
+    CLR_FLAG(state, FLAG_N | FLAG_C);
+    SET_FLAG(state, FLAG_H);
+    UPDATE_SZP(state, state->a);
+    break;
+
+  case 0xB0: // OR B
+    state->a |= state->b;
+    CLR_FLAG(state, FLAG_N | FLAG_H | FLAG_C);
+    UPDATE_SZP(state, state->a);
+    break;
+
+    // Increment/Decrement Group
+  case 0x04: { // INC B
+    uint8_t res = state->b + 1;
+    CLR_FLAG(state, FLAG_N);
+    if ((state->b & 0x0F) == 0x0F) SET_FLAG(state, FLAG_H);
+    state->b = res;
+    UPDATE_SZP(state, res);
     break;
   }
 
-  case 0xDA: { // JP C,nn
-    if (TST_FLAG(FLAG_C)) {
-      pc = MEM_WORD(pc);
-    }
-    else {
-      pc += 2;
-    }
+  case 0x05: { // DEC B
+    uint8_t res = state->b - 1;
+    SET_FLAG(state, FLAG_N);
+    if ((state->b & 0x0F) == 0) SET_FLAG(state, FLAG_H);
+    state->b = res;
+    UPDATE_SZP(state, res);
     break;
   }
-
-           // Stack Ops
-  case 0xF5: // PUSH AF
-    MEM(--sp) = a;
-    MEM(--sp) = f;
-    break;
 
   default:
-    // Handle unknown opcode
-    printf("Unknown opcode: 0x%02X at 0x%04X\n", opcode, pc - 1);
-    break;
+    fprintf(stderr, "Unimplemented opcode: 0x%02X at 0x%04X\n",
+      opcode, state->pc - 1);
+    return -1;
   }
+
+  return 0;
+}
+
+void push16(Z80_State* state, uint16_t val) {
+  mem_write(--state->sp, (val >> 8) & 0xFF);
+  mem_write(--state->sp, val & 0xFF);
+}
+
+uint16_t pop16(Z80_State* state) {
+  uint16_t lo = mem_read(state->sp++);
+  uint16_t hi = mem_read(state->sp++);
+  return (hi << 8) | lo;
 }

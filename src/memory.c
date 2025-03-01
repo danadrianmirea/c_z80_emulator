@@ -1,13 +1,17 @@
-// memory.h
+// memory.c
 #include "zx_spectrum.h"
+#include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
 
-uint8_t memory[MEM_SIZE];
+// 64KB memory array
+uint8_t memory[MEM_SIZE] = { 0 };
 
 bool load_rom(const char* path) {
   FILE* rom = fopen(path, "rb");
   if (!rom) {
     perror("ROM load failed");
-    return 0;
+    return false;
   }
 
   fseek(rom, 0, SEEK_END);
@@ -30,4 +34,20 @@ bool load_rom(const char* path) {
 
   printf("Loaded Spectrum ROM successfully\n");
   return true;
+}
+
+// Memory access functions
+uint8_t mem_read(uint16_t addr) {
+  // Basic memory access without contention
+  return memory[addr];
+}
+
+void mem_write(uint16_t addr, uint8_t value) {
+  // Handle ROM protection (Spectrum ROM is read-only)
+  if (addr >= ROM_START && addr <= ROM_END) {
+    return; // Ignore writes to ROM area
+  }
+
+  // Regular RAM write
+  memory[addr] = value;
 }
