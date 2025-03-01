@@ -1,5 +1,6 @@
 /* main.c */
 #include "zx_spectrum.h"
+#define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
 #include <stdio.h>
 
@@ -99,14 +100,30 @@ void display_cleanup() {
   SDL_Quit();
 }
 
-int WinMain(int argc, char* argv[]) {
+void print_usage(const char* program_name) {
+  printf("ZX Spectrum Emulator\n");
+  printf("Usage: %s <rom_file> <z80_snapshot>\n\n", program_name);
+  printf("Example: %s 48.rom game.z80\n", program_name);
+}
+
+// Add this to your main.c
+#ifdef _WIN32
+#undef main
+#endif
+
+int main(int argc, char* argv[]) {
+  if (argc < 3) {
+    print_usage(argv[0]);
+    return RETCODE_INVALID_ARGUMENTS;
+  }
+
   display_init();
 
   Z80_State z80_state;
   z80_init(&z80_state);
 
-  const char* romName = "48.rom";
-  const char* z80Name = "mm2000.z80";
+  const char* romName = argv[1];
+  const char* z80Name = argv[2];
 
   if (!load_rom(romName)) {
     display_cleanup();
