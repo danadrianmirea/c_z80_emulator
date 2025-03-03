@@ -14,7 +14,6 @@ static const uint8_t parity_table[256] = {
     0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1
 };
 
-
 bool load_rom(const char* path) {
   // Existing ROM loading code
   FILE* rom = fopen(path, "rb");
