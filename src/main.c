@@ -21,8 +21,7 @@ const uint32_t palette[16] = {0xFF000000, 0xFF0000D7, 0xFFD70000,
                               0xFFD7D7D7, // Green, Cyan, Yellow, White
                               0xFF000000, 0xFF0000FF, 0xFFFF0000,
                               0xFFFF00FF, // Bright variants
-                              0xFF00FF00, 0xFF00FFFF, 0xFFFFFF00,
-                              0xFFFFFFFF};
+                              0xFF00FF00, 0xFF00FFFF, 0xFFFFFF00, 0xFFFFFFFF};
 
 void display_init() {
   SDL_Init(SDL_INIT_VIDEO);
@@ -311,7 +310,7 @@ int main(int argc, char *argv[]) {
     z80_step(&z80_state);
     perform_sleep();
   }
-  
+
   display_cleanup();
   return RETCODE_NO_ERROR;
 }

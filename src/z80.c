@@ -285,6 +285,7 @@ int decode_cb(Z80_State* state) {
     state->a = (state->a << 1) | temp;
     UPDATE_SZP(state, state->a);
     break;
+
   case 0x08: // RRC B
     temp = state->b & 1;
     state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
@@ -292,6 +293,7 @@ int decode_cb(Z80_State* state) {
     state->b = (state->b >> 1) | (temp << 7);
     UPDATE_SZP(state, state->b);
     break;
+
   case 0x09: // RRC C
     temp = state->c & 1;
     state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
@@ -299,6 +301,7 @@ int decode_cb(Z80_State* state) {
     state->c = (state->c >> 1) | (temp << 7);
     UPDATE_SZP(state, state->c);
     break;
+
   case 0x0A: // RRC D
     temp = state->d & 1;
     state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
@@ -306,6 +309,7 @@ int decode_cb(Z80_State* state) {
     state->d = (state->d >> 1) | (temp << 7);
     UPDATE_SZP(state, state->d);
     break;
+
   case 0x0B: // RRC E
     temp = state->e & 1;
     state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
@@ -313,6 +317,7 @@ int decode_cb(Z80_State* state) {
     state->e = (state->e >> 1) | (temp << 7);
     UPDATE_SZP(state, state->e);
     break;
+
   case 0x0C: // RRC H
     temp = state->h & 1;
     state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
@@ -320,6 +325,7 @@ int decode_cb(Z80_State* state) {
     state->h = (state->h >> 1) | (temp << 7);
     UPDATE_SZP(state, state->h);
     break;
+
   case 0x0D: // RRC L
     temp = state->l & 1;
     state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
@@ -327,6 +333,7 @@ int decode_cb(Z80_State* state) {
     state->l = (state->l >> 1) | (temp << 7);
     UPDATE_SZP(state, state->l);
     break;
+
   case 0x0E: // RRC (HL)
     temp = mem_read(state->hl) & 1;
     state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
@@ -334,6 +341,7 @@ int decode_cb(Z80_State* state) {
     mem_write(state->hl, (mem_read(state->hl) >> 1) | (temp << 7));
     UPDATE_SZP(state, mem_read(state->hl));
     break;
+
   case 0x0F: // RRC A
     temp = state->a & 1;
     state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
@@ -341,6 +349,7 @@ int decode_cb(Z80_State* state) {
     state->a = (state->a >> 1) | (temp << 7);
     UPDATE_SZP(state, state->a);
     break;
+
   case 0x10: // RL B
     temp = (state->b << 1) | (state->f & FLAG_C);
     state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
@@ -348,6 +357,7 @@ int decode_cb(Z80_State* state) {
     state->b = temp & 0xFF;
     UPDATE_SZP(state, state->b);
     break;
+
   case 0x11: // RL C
     temp = (state->c << 1) | (state->f & FLAG_C);
     state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
@@ -355,6 +365,7 @@ int decode_cb(Z80_State* state) {
     state->c = temp & 0xFF;
     UPDATE_SZP(state, state->c);
     break;
+
   case 0x12: // RL D
     temp = (state->d << 1) | (state->f & FLAG_C);
     state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
@@ -362,6 +373,7 @@ int decode_cb(Z80_State* state) {
     state->d = temp & 0xFF;
     UPDATE_SZP(state, state->d);
     break;
+
   case 0x13: // RL E
     temp = (state->e << 1) | (state->f & FLAG_C);
     state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
@@ -369,6 +381,7 @@ int decode_cb(Z80_State* state) {
     state->e = temp & 0xFF;
     UPDATE_SZP(state, state->e);
     break;
+
   case 0x14: // RL H
     temp = (state->h << 1) | (state->f & FLAG_C);
     state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
@@ -376,6 +389,7 @@ int decode_cb(Z80_State* state) {
     state->h = temp & 0xFF;
     UPDATE_SZP(state, state->h);
     break;
+
   case 0x15: // RL L
     temp = (state->l << 1) | (state->f & FLAG_C);
     state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
@@ -383,6 +397,7 @@ int decode_cb(Z80_State* state) {
     state->l = temp & 0xFF;
     UPDATE_SZP(state, state->l);
     break;
+
   case 0x16: // RL (HL)
     temp = (mem_read(state->hl) << 1) | (state->f & FLAG_C);
     state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
@@ -390,6 +405,7 @@ int decode_cb(Z80_State* state) {
     mem_write(state->hl, temp & 0xFF);
     UPDATE_SZP(state, mem_read(state->hl));
     break;
+
   case 0x17: // RL A
     temp = (state->a << 1) | (state->f & FLAG_C);
     state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
@@ -397,6 +413,7 @@ int decode_cb(Z80_State* state) {
     state->a = temp & 0xFF;
     UPDATE_SZP(state, state->a);
     break;
+
   case 0x18: // RR B
     temp = state->b & 1;
     state->b = (state->b >> 1) | ((state->f & FLAG_C) << 7);
@@ -460,7 +477,6 @@ int decode_cb(Z80_State* state) {
     state->f |= temp ? FLAG_C : 0;
     UPDATE_SZP(state, state->a);
     break;
-
 
   case 0x40: // BIT 0, B
   case 0x41: // BIT 0, C
