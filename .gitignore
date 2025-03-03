@@ -1,3 +1,4 @@
 /obj/
 /build/
 *.exe
+*.idx

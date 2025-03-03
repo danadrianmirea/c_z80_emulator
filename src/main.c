@@ -4,6 +4,8 @@
 #include <SDL2/SDL.h>
 #include <stdio.h>
 
+#define DEBUG_MODE 1
+
 extern uint8_t memory[MEM_SIZE];
 
 SDL_Window* window = NULL;
@@ -311,15 +313,22 @@ int main(int argc, char* argv[]) {
     display_update(memory);
     z80_step(&z80_state);
 
-    /*
+    
     static uint32_t last_time = 0;
     uint32_t current_time = SDL_GetTicks();
     uint32_t delta_time = current_time - last_time;
     last_time = current_time;
     uint32_t instructions_per_ms = 3500000 / 1000;
-    uint32_t delay = (1000000000 / 3500000) / instructions_per_ms - delta_time;
+    uint32_t target_time = (1000000000 / 3500000) / instructions_per_ms;
+    uint32_t delay = (delta_time < target_time) ? target_time - delta_time : 0;
     if (delay > 0) SDL_Delay(delay);
-    */
+    
+
+#ifdef DEBUG_MODE
+    if ((current_time / 500) % 2 == 0) {
+      printf("delta_time: %u, delay: %u\n", delta_time, delay);
+    }
+#endif
   }
 
   display_cleanup();
