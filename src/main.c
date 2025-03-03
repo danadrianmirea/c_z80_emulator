@@ -4,7 +4,6 @@
 #include <SDL2/SDL.h>
 #include <stdio.h>
 
-#define DEBUG_MODE 1
 #define LOGGING_INTERVAL_SLOW 100
 
 extern uint8_t memory[MEM_SIZE];
@@ -259,12 +258,6 @@ void perform_sleep() {
   uint32_t delay = (delta_time < target_time) ? target_time - delta_time : 0;
   if (delay > 0)
     SDL_Delay(delay);
-
-#ifdef DEBUG_MODE
-  if ((current_time / LOGGING_INTERVAL_SLOW) % 2 == 0) {
-    printf("delta_time: %u, delay: %u\n", delta_time, delay);
-  }
-#endif
 }
 
 void print_usage(const char *program_name) {
