@@ -373,6 +373,110 @@ int decode_cb(Z80_State* state) {
   }
 }
 
+int decode_dd(Z80_State* state) {
+  uint8_t opcode = mem_read(state->pc++);
+  uint8_t temp;
+  uint16_t temp16;
+  uint8_t n;
+  uint8_t carry;
+  uint8_t res;
+  uint8_t port;
+
+  switch (opcode) {
+  case 0x09: // ADD IX, BC
+    temp16 = state->ix + state->bc;
+    SET_FLAG(state, FLAG_N);
+    CLR_FLAG(state, FLAG_C | FLAG_H);
+    if (temp16 & 0x10000) SET_FLAG(state, FLAG_C);
+    if (((state->ix & 0x0FFF) + (state->bc & 0x0FFF)) & 0x1000)
+      SET_FLAG(state, FLAG_H);
+    state->ix = temp16;
+    break;
+
+  case 0x19: // ADD IX, DE
+    temp16 = state->ix + state->de;
+    SET_FLAG(state, FLAG_N);
+    CLR_FLAG(state, FLAG_C | FLAG_H);
+    if (temp16 & 0x10000) SET_FLAG(state, FLAG_C);
+    if (((state->ix & 0x0FFF) + (state->de & 0x0FFF)) & 0x1000)
+      SET_FLAG(state, FLAG_H);
+    state->ix = temp16;
+    break;
+
+  case 0xCB: // CB-prefixed opcodes
+    return decode_ddcb(state);
+
+  default:
+    printf("Unknown DD opcode: %02X\n", opcode);
+    return 0;
+  }
+}
+
+int decode_ddcb(Z80_State* state) {
+  uint8_t opcode = mem_read(state->pc++);
+  uint8_t temp;
+  uint16_t temp16;
+  uint8_t n;
+  uint8_t carry;
+  uint8_t res;
+  uint8_t port;
+
+  switch (opcode) {
+  default:
+    printf("Unknown DD CB opcode: %02X\n", opcode);
+    return 0;
+  }
+}
+int decode_ed(Z80_State* state) {
+  uint8_t opcode = mem_read(state->pc++);
+  uint8_t temp;
+  uint16_t temp16;
+  uint8_t n;
+  uint8_t carry;
+  uint8_t res;
+  uint8_t port;
+
+  switch (opcode) {
+  default:
+    printf("Unknown ED opcode: %02X\n", opcode);
+    return 0;
+  }
+}
+
+int decode_fd(Z80_State* state) {
+  uint8_t opcode = mem_read(state->pc++);
+  uint8_t temp;
+  uint16_t temp16;
+  uint8_t n;
+  uint8_t carry;
+  uint8_t res;
+  uint8_t port;
+
+  switch (opcode) {
+  case 0xCB:
+    return decode_fdcb(state);
+  default:
+    printf("Unknown FD opcode: %02X\n", opcode);
+    return 0;
+  }
+}
+
+int decode_fdcb(Z80_State* state) {
+  uint8_t opcode = mem_read(state->pc++);
+  uint8_t temp;
+  uint16_t temp16;
+  uint8_t n;
+  uint8_t carry;
+  uint8_t res;
+  uint8_t port;
+
+  switch (opcode) {
+  default:
+    printf("Unknown FD CB opcode: %02X\n", opcode);
+    return 0;
+  }
+}
+
 int z80_step(Z80_State* state) {
   uint8_t opcode = mem_read(state->pc++);
   uint8_t temp;
@@ -386,318 +490,478 @@ int z80_step(Z80_State* state) {
 
   case 0x00: // NOP
     break;
-
-    // 8-bit Load Group
+  case 0x01: // LD BC,nn
+    state->bc = (mem_read(state->pc++) << 8) | mem_read(state->pc++);
+    break;
+  case 0x02: // LD (BC),A
+    mem_write(state->bc, state->a);
+    break;
+  case 0x03: // INC BC
+    state->bc++;
+    break;
+  case 0x04: // INC B
+    state->b++;
+    UPDATE_SZ(state, state->b);
+    break;
+  case 0x05: // DEC B
+    state->b--;
+    UPDATE_SZ(state, state->b);
+    SET_FLAG(state, FLAG_N);
+    break;
   case 0x06: // LD B,n
     state->b = mem_read(state->pc++);
     break;
-
+  case 0x07: // RLCA
+    state->a = (state->a << 1) | (state->a >> 7);
+    UPDATE_SZ(state, state->a);
+    break;
+  case 0x08: // EX AF, AF'
+    uint8_t tempA = state->a;
+    uint8_t tempF = state->f;
+    state->a = state->a_;
+    state->f = state->f_;
+    state->a_ = tempA;
+    state->f_ = tempF;
+    break;
+  case 0x09: // ADD HL,BC
+    temp16 = state->hl + state->bc;
+    CLR_FLAG(state, FLAG_N | FLAG_H | FLAG_C);
+    if (((state->hl & 0x0FFF) + (state->bc & 0x0FFF)) > 0x0FFF) SET_FLAG(state, FLAG_H);
+    if (temp16 < state->hl) SET_FLAG(state, FLAG_C);
+    state->hl = temp16;
+    break;
   case 0x0A: // LD A,(BC)
     state->a = mem_read(state->bc);
     break;
-
+  case 0x0B: // DEC BC
+    state->bc--;
+    break;
+  case 0x0C: // INC C
+    state->c++;
+    UPDATE_SZ(state, state->c);
+    break;
+  case 0x0D: // DEC C
+    state->c--;
+    UPDATE_SZ(state, state->c);
+    SET_FLAG(state, FLAG_N);
+    break;
+  case 0x0E: // LD C,n
+    state->c = mem_read(state->pc++);
+    break;
+  case 0x0F: // RRCA
+    state->a = (state->a >> 1) | (state->a << 7);
+    UPDATE_SZ(state, state->a);
+    break;
+  case 0x10: // DJNZ n
+    temp = mem_read(state->pc + 1);
+    state->b--;
+    if (state->b != 0) {
+      state->pc += temp;
+    }
+    break;
+  case 0x11: // LD DE,nn
+    state->de = (mem_read(state->pc++) << 8) | mem_read(state->pc++);
+    break;
+  case 0x12: // LD (DE),A
+    mem_write(state->de, state->a);
+    break;
+  case 0x13: // INC DE
+    state->de++;
+    break;
+  case 0x14: // INC D
+    state->d++;
+    UPDATE_SZ(state, state->d);
+    break;
+  case 0x15: // DEC D
+    state->d--;
+    UPDATE_SZ(state, state->d);
+    SET_FLAG(state, FLAG_N);
+    break;
+  case 0x16: // LD D,n
+    state->d = mem_read(state->pc++);
+    break;
+  case 0x17: // RLA
+    temp = (state->a >> 7) & 1;
+    state->a = (state->a << 1) | (state->f & FLAG_C);
+    UPDATE_SZ(state, state->a);
+    state->f = (state->f & ~FLAG_C) | (temp << 4);
+    break;
+  case 0x18: // JR n
+    temp = mem_read(state->pc + 1);
+    state->pc += temp;
+    break;
+  case 0x19: // ADD HL,DE
+    temp16 = state->hl + state->de;
+    CLR_FLAG(state, FLAG_N | FLAG_H | FLAG_C);
+    if (((state->hl & 0x0FFF) + (state->de & 0x0FFF)) > 0x0FFF) SET_FLAG(state, FLAG_H);
+    if (temp16 < state->hl) SET_FLAG(state, FLAG_C);
+    state->hl = temp16;
+    break;
   case 0x1A: // LD A,(DE)
     state->a = mem_read(state->de);
     break;
-
+  case 0x1B: // DEC DE
+    state->de--;
+    break;
+  case 0x1C: // INC E
+    state->e++;
+    UPDATE_SZ(state, state->e);
+    break;
+  case 0x1D: // DEC E
+    state->e--;
+    UPDATE_SZ(state, state->e);
+    SET_FLAG(state, FLAG_N);
+    break;
+  case 0x1E: // LD E,n
+    state->e = mem_read(state->pc++);
+    break;
+  case 0x1F: // RRA
+    temp = (state->a & 1);
+    state->a = (state->a >> 1) | ((state->f & FLAG_C) << 7);
+    UPDATE_SZ(state, state->a);
+    state->f = (state->f & ~FLAG_C) | (temp << 4);
+    break;
+  case 0x20: // JR NZ, n
+    temp = mem_read(state->pc + 1);
+    if ((state->f & FLAG_Z) == 0) {
+      state->pc += temp;
+    }
+    break;
+  case 0x21: // LD HL,nn
+    state->hl = (mem_read(state->pc++) << 8) | mem_read(state->pc++);
+    break;
+  case 0x22: // LD (nn),HL
+    mem_write((mem_read(state->pc++) << 8) | mem_read(state->pc++), state->l);
+    mem_write((mem_read(state->pc++) << 8) | mem_read(state->pc++), state->h);
+    break;
+  case 0x23: // INC HL
+    state->hl++;
+    break;
+  case 0x24: // INC H
+    state->h++;
+    UPDATE_SZ(state, state->h);
+    break;
+  case 0x25: // DEC H
+    state->h--;
+    UPDATE_SZ(state, state->h);
+    SET_FLAG(state, FLAG_N);
+    break;
+  case 0x26: // LD H,n
+    state->h = mem_read(state->pc++);
+    break;
+  case 0x27: // DAA
+    temp = state->a;
+    if ((state->f & FLAG_C) || (state->a > 0x99)) {
+      state->a += 0x60;
+      SET_FLAG(state, FLAG_C);
+    }
+    if ((state->f & FLAG_H) || (state->a & 0x0F) > 0x09) {
+      state->a += 0x06;
+      SET_FLAG(state, FLAG_H);
+    }
+    UPDATE_SZ(state, state->a);
+    break;
+  case 0x28: // JR Z, n
+    temp = mem_read(state->pc + 1);
+    if ((state->f & FLAG_Z) != 0) {
+      state->pc += temp;
+    }
+    break;
+  case 0x29: // ADD HL,HL
+    temp16 = state->hl + state->hl;
+    CLR_FLAG(state, FLAG_N | FLAG_H | FLAG_C);
+    if (((state->hl & 0x0FFF) + (state->hl & 0x0FFF)) > 0x0FFF) SET_FLAG(state, FLAG_H);
+    if (temp16 < state->hl) SET_FLAG(state, FLAG_C);
+    state->hl = temp16;
+    break;
   case 0x2A: // LD HL,(nn)
     temp16 = mem_read(state->pc++);
     temp16 |= mem_read(state->pc++) << 8;
     state->l = mem_read(temp16);
     state->h = mem_read(temp16 + 1);
     break;
-
+  case 0x2B: // LD HL,nn
+    state->l = mem_read(state->pc++);
+    state->h = mem_read(state->pc++);
+    break;
+  case 0x2C: // LD (HL),A
+    mem_write(state->hl, state->a);
+    break;
+  case 0x2D: // DEC HL
+    state->hl--;
+    break;
+  case 0x2E: // LD L,n
+    state->l = mem_read(state->pc++);
+    break;
+  case 0x2F: // CPL
+    state->a = ~state->a;
+    SET_FLAG(state, FLAG_N | FLAG_H);
+    break;
+  case 0x30: // JR NC, n
+    temp = mem_read(state->pc + 1);
+    if ((state->f & FLAG_C) == 0) {
+      state->pc += temp;
+    }
+    break;
+  case 0x31: // LD SP,nn
+    state->sp = (mem_read(state->pc++) << 8) | mem_read(state->pc++);
+    break;
+  case 0x32: // LD (nn),A
+    mem_write((mem_read(state->pc++) << 8) | mem_read(state->pc++), state->a);
+    break;
+  case 0x33: // INC SP
+    state->sp++;
+    break;
+  case 0x34: // INC (HL)
+    temp = mem_read(state->hl);
+    temp++;
+    mem_write(state->hl, temp);
+    UPDATE_SZ(state, temp);
+    break;
+  case 0x35: // DEC (HL)
+    temp = mem_read(state->hl);
+    temp--;
+    mem_write(state->hl, temp);
+    UPDATE_SZ(state, temp);
+    SET_FLAG(state, FLAG_N);
+    break;
+  case 0x36: // LD (HL),n
+    mem_write(state->hl, mem_read(state->pc++));
+    break;
+  case 0x37: // SCF
+    CLR_FLAG(state, FLAG_N | FLAG_H);
+    SET_FLAG(state, FLAG_C);
+    break;
+  case 0x38: // JR C, n
+    temp = mem_read(state->pc + 1);
+    if ((state->f & FLAG_C) != 0) {
+      state->pc += temp;
+    }
+    break;
+  case 0x39: // ADD HL,SP
+    temp = state->sp + state->hl;
+    CLR_FLAG(state, FLAG_N);
+    if (temp & 0x10000) SET_FLAG(state, FLAG_C);
+    if (((state->hl ^ state->sp ^ temp) & 0x1000) == 0x1000) SET_FLAG(state, FLAG_H);
+    state->hl = temp & 0xFFFF;
+    break;
   case 0x3A: // LD A,(nn)
     temp16 = mem_read(state->pc++);
     temp16 |= mem_read(state->pc++) << 8;
     state->a = mem_read(temp16);
     break;
-
-  case 0x4A: // LD C,D
-    state->c = state->d;
+  case 0x3B: // DEC SP
+    state->sp--;
     break;
-
-  case 0x5A: // LD E,D
-    state->e = state->d;
+  case 0x3C: // INC A
+    state->a++;
+    UPDATE_SZ(state, state->a);
     break;
-
-  case 0x6A: // LD L,D
-    state->l = state->d;
+  case 0x3D: // DEC A
+    state->a--;
+    UPDATE_SZ(state, state->a);
+    SET_FLAG(state, FLAG_N);
     break;
-
-  case 0x7A: // LD A,D
-    state->a = state->d;
-    break;
-
-  case 0x0E: // LD C,n
-    state->c = mem_read(state->pc++);
-    break;
-
-  case 0x16: // LD D,n
-    state->d = mem_read(state->pc++);
-    break;
-
-  case 0x1E: // LD E,n
-    state->e = mem_read(state->pc++);
-    break;
-
-  case 0x26: // LD H,n
-    state->h = mem_read(state->pc++);
-    break;
-
-  case 0x2E: // LD L,n
-    state->l = mem_read(state->pc++);
-    break;
-
-  case 0x36: // LD (HL),n
-    mem_write(state->hl, mem_read(state->pc++));
-    break;
-
   case 0x3E: // LD A,n
     state->a = mem_read(state->pc++);
     break;
-
+  case 0x3F: // CCF
+    state->f ^= FLAG_C; // Toggle carry flag
+    CLR_FLAG(state, FLAG_N | FLAG_H); // Clear N and H flags
+    if (state->f & FLAG_C) SET_FLAG(state, FLAG_H); // Set H if carry is set
+    break;
   case 0x40: // LD B,B
     state->b = state->b;
     break;
-
   case 0x41: // LD B,C
     state->b = state->c;
     break;
-
   case 0x42: // LD B,D
     state->b = state->d;
     break;
-
   case 0x43: // LD B,E
     state->b = state->e;
     break;
-
   case 0x44: // LD B,H
     state->b = state->h;
     break;
-
   case 0x45: // LD B,L
     state->b = state->l;
     break;
-
   case 0x46: // LD B,(HL)
     state->b = mem_read(state->hl);
     break;
-
   case 0x47: // LD B,A
     state->b = state->a;
     break;
-
   case 0x48: // LD C,B
     state->c = state->b;
     break;
-
   case 0x49: // LD C,C
     state->c = state->c;
     break;
-
+  case 0x4A: // LD C,D
+    state->c = state->d;
+    break;
   case 0x4B: // LD C,E
     state->c = state->e;
     break;
-
   case 0x4C: // LD C,H
     state->c = state->h;
     break;
-
   case 0x4D: // LD C,L
     state->c = state->l;
     break;
-
   case 0x4E: // LD C,(HL)
     state->c = mem_read(state->hl);
     break;
-
   case 0x4F: // LD C,A
     state->c = state->a;
     break;
-
   case 0x50: // LD D,B
     state->d = state->b;
     break;
-
   case 0x51: // LD D,C
     state->d = state->c;
     break;
-
   case 0x52: // LD D,D
     state->d = state->d;
     break;
-
   case 0x53: // LD D,E
     state->d = state->e;
     break;
-
   case 0x54: // LD D,H
     state->d = state->h;
     break;
-
   case 0x55: // LD D,L
     state->d = state->l;
     break;
-
   case 0x56: // LD D,(HL)
     state->d = mem_read(state->hl);
     break;
-
   case 0x57: // LD D,A
     state->d = state->a;
     break;
-
   case 0x58: // LD E,B
     state->e = state->b;
     break;
-
   case 0x59: // LD E,C
     state->e = state->c;
     break;
-
+  case 0x5A: // LD E,D
+    state->e = state->d;
+    break;
   case 0x5B: // LD E,E
     state->e = state->e;
     break;
-
   case 0x5C: // LD E,H
     state->e = state->h;
     break;
-
   case 0x5D: // LD E,L
     state->e = state->l;
     break;
-
   case 0x5E: // LD E,(HL)
     state->e = mem_read(state->hl);
     break;
-
   case 0x5F: // LD E,A
     state->e = state->a;
     break;
-
   case 0x60: // LD H,B
     state->h = state->b;
     break;
-
   case 0x61: // LD H,C
     state->h = state->c;
     break;
-
   case 0x62: // LD H,D
     state->h = state->d;
     break;
-
   case 0x63: // LD H,E
     state->h = state->e;
     break;
-
   case 0x64: // LD H,H
     state->h = state->h;
     break;
-
   case 0x65: // LD H,L
     state->h = state->l;
     break;
-
   case 0x66: // LD H,(HL)
     state->h = mem_read(state->hl);
     break;
-
   case 0x67: // LD H,A
     state->h = state->a;
     break;
-
   case 0x68: // LD L,B
     state->l = state->b;
     break;
-
   case 0x69: // LD L,C
     state->l = state->c;
     break;
-
+  case 0x6A: // LD L,D
+    state->l = state->d;
+    break;
   case 0x6B: // LD L,E
     state->l = state->e;
     break;
-
   case 0x6C: // LD L,H
     state->l = state->h;
     break;
-
   case 0x6D: // LD L,L
     state->l = state->l;
     break;
-
   case 0x6E: // LD L,(HL)
     state->l = mem_read(state->hl);
     break;
-
   case 0x6F: // LD L,A
     state->l = state->a;
     break;
-
   case 0x70: // LD (HL),B
     mem_write(state->hl, state->b);
     break;
-
   case 0x71: // LD (HL),C
     mem_write(state->hl, state->c);
     break;
-
   case 0x72: // LD (HL),D
     mem_write(state->hl, state->d);
     break;
-
   case 0x73: // LD (HL),E
     mem_write(state->hl, state->e);
     break;
-
   case 0x74: // LD (HL),H
     mem_write(state->hl, state->h);
     break;
-
   case 0x75: // LD (HL),L
     mem_write(state->hl, state->l);
     break;
-
   case 0x76: // HALT
     // TODO: Implement HALT instruction
     break;
-
   case 0x77: // LD (HL),A
     mem_write(state->hl, state->a);
     break;
-
   case 0x78: // LD A,B
     state->a = state->b;
     break;
-
   case 0x79: // LD A,C
     state->a = state->c;
     break;
-
+  case 0x7A: // LD A,D
+    state->a = state->d;
+    break;
   case 0x7B: // LD A,E
     state->a = state->e;
     break;
-
   case 0x7C: // LD A,H
     state->a = state->h;
     break;
-
   case 0x7D: // LD A,L
     state->a = state->l;
     break;
-
   case 0x7E: // LD A,(HL)
     state->a = mem_read(state->hl);
     break;
-
   case 0x7F: // LD A,A
     state->a = state->a;
     break;
-
-    // 8-bit Logical Group
   case 0x80: // ADD A, B
     uint8_t temp = state->a + state->b;
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -708,7 +972,6 @@ int z80_step(Z80_State* state) {
     state->f |= (state->a ^ state->b ^ temp) & FLAG_C;
     state->a = temp;
     break;
-
   case 0x81: // ADD A, C
     temp = state->a + state->c;
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -719,7 +982,6 @@ int z80_step(Z80_State* state) {
     state->f |= (state->a ^ state->c ^ temp) & FLAG_C;
     state->a = temp;
     break;
-
   case 0x82: // ADD A, D
     temp = state->a + state->d;
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -730,7 +992,6 @@ int z80_step(Z80_State* state) {
     state->f |= (state->a ^ state->d ^ temp) & FLAG_C;
     state->a = temp;
     break;
-
   case 0x83: // ADD A, E
     temp = state->a + state->e;
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -741,7 +1002,6 @@ int z80_step(Z80_State* state) {
     state->f |= (state->a ^ state->e ^ temp) & FLAG_C;
     state->a = temp;
     break;
-
   case 0x84: // ADD A, H
     temp = state->a + state->h;
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -752,7 +1012,6 @@ int z80_step(Z80_State* state) {
     state->f |= (state->a ^ state->h ^ temp) & FLAG_C;
     state->a = temp;
     break;
-
   case 0x85: // ADD A, L
     temp = state->a + state->l;
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -763,7 +1022,6 @@ int z80_step(Z80_State* state) {
     state->f |= (state->a ^ state->l ^ temp) & FLAG_C;
     state->a = temp;
     break;
-
   case 0x86: // ADD A, (HL)
     temp = state->a + mem_read(state->hl);
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -774,7 +1032,6 @@ int z80_step(Z80_State* state) {
     state->f |= (state->a ^ mem_read(state->hl) ^ temp) & FLAG_C;
     state->a = temp;
     break;
-
   case 0x87: // ADD A, A
     temp = state->a + state->a;
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -785,7 +1042,6 @@ int z80_step(Z80_State* state) {
     state->f |= (state->a ^ state->a ^ temp) & FLAG_C;
     state->a = temp;
     break;
-
   case 0x88: // ADC A, B
     temp = state->a + state->b + (state->f & FLAG_C);
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -796,7 +1052,6 @@ int z80_step(Z80_State* state) {
     state->f |= (state->a ^ state->b ^ temp) & FLAG_C;
     state->a = temp;
     break;
-
   case 0x89: // ADC A, C
     temp = state->a + state->c + (state->f & FLAG_C);
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -807,7 +1062,6 @@ int z80_step(Z80_State* state) {
     state->f |= (state->a ^ state->c ^ temp) & FLAG_C;
     state->a = temp;
     break;
-
   case 0x8A: // ADC A, D
     temp = state->a + state->d + (state->f & FLAG_C);
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -818,7 +1072,6 @@ int z80_step(Z80_State* state) {
     state->f |= (state->a ^ state->d ^ temp) & FLAG_C;
     state->a = temp;
     break;
-
   case 0x8B: // ADC A, E
     temp = state->a + state->e + (state->f & FLAG_C);
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -829,7 +1082,6 @@ int z80_step(Z80_State* state) {
     state->f |= (state->a ^ state->e ^ temp) & FLAG_C;
     state->a = temp;
     break;
-
   case 0x8C: // ADC A, H
     temp = state->a + state->h + (state->f & FLAG_C);
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -840,7 +1092,6 @@ int z80_step(Z80_State* state) {
     state->f |= (state->a ^ state->h ^ temp) & FLAG_C;
     state->a = temp;
     break;
-
   case 0x8D: // ADC A, L
     temp = state->a + state->l + (state->f & FLAG_C);
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -851,7 +1102,6 @@ int z80_step(Z80_State* state) {
     state->f |= (state->a ^ state->l ^ temp) & FLAG_C;
     state->a = temp;
     break;
-
   case 0x8E: // ADC A, (HL)
     temp = state->a + mem_read(state->hl) + (state->f & FLAG_C);
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -862,7 +1112,6 @@ int z80_step(Z80_State* state) {
     state->f |= (state->a ^ mem_read(state->hl) ^ temp) & FLAG_C;
     state->a = temp;
     break;
-
   case 0x8F: // ADC A, A
     temp = state->a + state->a + (state->f & FLAG_C);
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -873,7 +1122,6 @@ int z80_step(Z80_State* state) {
     state->f |= (state->a ^ state->a ^ temp) & FLAG_C;
     state->a = temp;
     break;
-
   case 0x90: // SUB B
     temp = state->a - state->b;
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -884,7 +1132,6 @@ int z80_step(Z80_State* state) {
     state->f |= (state->a < state->b) ? FLAG_C : 0;
     state->a = temp;
     break;
-
   case 0x91: // SUB C
     temp = state->a - state->c;
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -895,7 +1142,6 @@ int z80_step(Z80_State* state) {
     state->f |= (state->a < state->c) ? FLAG_C : 0;
     state->a = temp;
     break;
-
   case 0x92: // SUB D
     temp = state->a - state->d;
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -906,7 +1152,6 @@ int z80_step(Z80_State* state) {
     state->f |= (state->a < state->d) ? FLAG_C : 0;
     state->a = temp;
     break;
-
   case 0x93: // SUB E
     temp = state->a - state->e;
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -917,7 +1162,6 @@ int z80_step(Z80_State* state) {
     state->f |= (state->a < state->e) ? FLAG_C : 0;
     state->a = temp;
     break;
-
   case 0x94: // SUB H
     temp = state->a - state->h;
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -928,7 +1172,6 @@ int z80_step(Z80_State* state) {
     state->f |= (state->a < state->h) ? FLAG_C : 0;
     state->a = temp;
     break;
-
   case 0x95: // SUB L
     temp = state->a - state->l;
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -939,7 +1182,6 @@ int z80_step(Z80_State* state) {
     state->f |= (state->a < state->l) ? FLAG_C : 0;
     state->a = temp;
     break;
-
   case 0x96: // SUB (HL)
     temp = state->a - mem_read(state->hl);
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -950,7 +1192,6 @@ int z80_step(Z80_State* state) {
     state->f |= (state->a < mem_read(state->hl)) ? FLAG_C : 0;
     state->a = temp;
     break;
-
   case 0x97: // SUB A
     temp = state->a - state->a;
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -971,7 +1212,6 @@ int z80_step(Z80_State* state) {
     state->f |= (state->a < state->b + (state->f & FLAG_C)) ? FLAG_C : 0;
     state->a = temp;
     break;
-
   case 0x99: // SBC A, C
     temp = state->a - state->c - (state->f & FLAG_C);
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -982,7 +1222,6 @@ int z80_step(Z80_State* state) {
     state->f |= (state->a < state->c + (state->f & FLAG_C)) ? FLAG_C : 0;
     state->a = temp;
     break;
-
   case 0x9A: // SBC A, D
     temp = state->a - state->d - (state->f & FLAG_C);
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -993,7 +1232,6 @@ int z80_step(Z80_State* state) {
     state->f |= (state->a < state->d + (state->f & FLAG_C)) ? FLAG_C : 0;
     state->a = temp;
     break;
-
   case 0x9B: // SBC A, E
     temp = state->a - state->e - (state->f & FLAG_C);
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -1004,7 +1242,6 @@ int z80_step(Z80_State* state) {
     state->f |= (state->a < state->e + (state->f & FLAG_C)) ? FLAG_C : 0;
     state->a = temp;
     break;
-
   case 0x9C: // SBC A, H
     temp = state->a - state->h - (state->f & FLAG_C);
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -1015,7 +1252,6 @@ int z80_step(Z80_State* state) {
     state->f |= (state->a < state->h + (state->f & FLAG_C)) ? FLAG_C : 0;
     state->a = temp;
     break;
-
   case 0x9D: // SBC A, L
     temp = state->a - state->l - (state->f & FLAG_C);
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -1026,7 +1262,6 @@ int z80_step(Z80_State* state) {
     state->f |= (state->a < state->l + (state->f & FLAG_C)) ? FLAG_C : 0;
     state->a = temp;
     break;
-
   case 0x9E: // SBC A, (HL)
     temp = state->a - mem_read(state->hl) - (state->f & FLAG_C);
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -1037,7 +1272,6 @@ int z80_step(Z80_State* state) {
     state->f |= (state->a < mem_read(state->hl) + (state->f & FLAG_C)) ? FLAG_C : 0;
     state->a = temp;
     break;
-
   case 0x9F: // SBC A, A
     temp = state->a - state->a - (state->f & FLAG_C);
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -1048,7 +1282,6 @@ int z80_step(Z80_State* state) {
     state->f |= (state->a < state->a + (state->f & FLAG_C)) ? FLAG_C : 0;
     state->a = temp;
     break;
-
   case 0xA0: // AND B
     state->a = state->a & state->b;
     state->f = (state->a & FLAG_S) != 0 ? FLAG_S : 0;
@@ -1056,7 +1289,6 @@ int z80_step(Z80_State* state) {
     state->f |= FLAG_H;
     state->f |= (state->a == 0) ? FLAG_Z : 0;
     break;
-
   case 0xA1: // AND C
     state->a = state->a & state->c;
     state->f = (state->a & FLAG_S) != 0 ? FLAG_S : 0;
@@ -1064,7 +1296,6 @@ int z80_step(Z80_State* state) {
     state->f |= FLAG_H;
     state->f |= (state->a == 0) ? FLAG_Z : 0;
     break;
-
   case 0xA2: // AND D
     state->a = state->a & state->d;
     state->f = (state->a & FLAG_S) != 0 ? FLAG_S : 0;
@@ -1072,7 +1303,6 @@ int z80_step(Z80_State* state) {
     state->f |= FLAG_H;
     state->f |= (state->a == 0) ? FLAG_Z : 0;
     break;
-
   case 0xA3: // AND E
     state->a = state->a & state->e;
     state->f = (state->a & FLAG_S) != 0 ? FLAG_S : 0;
@@ -1080,7 +1310,6 @@ int z80_step(Z80_State* state) {
     state->f |= FLAG_H;
     state->f |= (state->a == 0) ? FLAG_Z : 0;
     break;
-
   case 0xA4: // AND H
     state->a = state->a & state->h;
     state->f = (state->a & FLAG_S) != 0 ? FLAG_S : 0;
@@ -1088,7 +1317,6 @@ int z80_step(Z80_State* state) {
     state->f |= FLAG_H;
     state->f |= (state->a == 0) ? FLAG_Z : 0;
     break;
-
   case 0xA5: // AND L
     state->a = state->a & state->l;
     state->f = (state->a & FLAG_S) != 0 ? FLAG_S : 0;
@@ -1096,7 +1324,6 @@ int z80_step(Z80_State* state) {
     state->f |= FLAG_H;
     state->f |= (state->a == 0) ? FLAG_Z : 0;
     break;
-
   case 0xA6: // AND (HL)
     state->a = state->a & mem_read(state->hl);
     state->f = (state->a & FLAG_S) != 0 ? FLAG_S : 0;
@@ -1104,7 +1331,6 @@ int z80_step(Z80_State* state) {
     state->f |= FLAG_H;
     state->f |= (state->a == 0) ? FLAG_Z : 0;
     break;
-
   case 0xA7: // AND A
     state->a = state->a & state->a;
     state->f = (state->a & FLAG_S) != 0 ? FLAG_S : 0;
@@ -1112,7 +1338,6 @@ int z80_step(Z80_State* state) {
     state->f |= FLAG_H;
     state->f |= (state->a == 0) ? FLAG_Z : 0;
     break;
-
   case 0xA8: // XOR B
     state->a = state->a ^ state->b;
     state->f = (state->a & FLAG_S) != 0 ? FLAG_S : 0;
@@ -1120,7 +1345,6 @@ int z80_step(Z80_State* state) {
     state->f &= ~FLAG_H;
     state->f |= (state->a == 0) ? FLAG_Z : 0;
     break;
-
   case 0xA9: // XOR C
     state->a = state->a ^ state->c;
     state->f = (state->a & FLAG_S) != 0 ? FLAG_S : 0;
@@ -1128,7 +1352,6 @@ int z80_step(Z80_State* state) {
     state->f &= ~FLAG_H;
     state->f |= (state->a == 0) ? FLAG_Z : 0;
     break;
-
   case 0xAA: // XOR D
     state->a = state->a ^ state->d;
     state->f = (state->a & FLAG_S) != 0 ? FLAG_S : 0;
@@ -1136,7 +1359,6 @@ int z80_step(Z80_State* state) {
     state->f &= ~FLAG_H;
     state->f |= (state->a == 0) ? FLAG_Z : 0;
     break;
-
   case 0xAB: // XOR E
     state->a = state->a ^ state->e;
     state->f = (state->a & FLAG_S) != 0 ? FLAG_S : 0;
@@ -1144,7 +1366,6 @@ int z80_step(Z80_State* state) {
     state->f &= ~FLAG_H;
     state->f |= (state->a == 0) ? FLAG_Z : 0;
     break;
-
   case 0xAC: // XOR H
     state->a = state->a ^ state->h;
     state->f = (state->a & FLAG_S) != 0 ? FLAG_S : 0;
@@ -1152,7 +1373,6 @@ int z80_step(Z80_State* state) {
     state->f &= ~FLAG_H;
     state->f |= (state->a == 0) ? FLAG_Z : 0;
     break;
-
   case 0xAD: // XOR L
     state->a = state->a ^ state->l;
     state->f = (state->a & FLAG_S) != 0 ? FLAG_S : 0;
@@ -1160,7 +1380,6 @@ int z80_step(Z80_State* state) {
     state->f &= ~FLAG_H;
     state->f |= (state->a == 0) ? FLAG_Z : 0;
     break;
-
   case 0xAE: // XOR (HL)
     state->a = state->a ^ mem_read(state->hl);
     state->f = (state->a & FLAG_S) != 0 ? FLAG_S : 0;
@@ -1168,7 +1387,6 @@ int z80_step(Z80_State* state) {
     state->f &= ~FLAG_H;
     state->f |= (state->a == 0) ? FLAG_Z : 0;
     break;
-
   case 0xAF: // XOR A
     state->a = state->a ^ state->a;
     state->f = (state->a & FLAG_S) != 0 ? FLAG_S : 0;
@@ -1176,7 +1394,6 @@ int z80_step(Z80_State* state) {
     state->f &= ~FLAG_H;
     state->f |= (state->a == 0) ? FLAG_Z : 0;
     break;
-
   case 0xB0: // OR B
     state->a = state->a | state->b;
     state->f = (state->a & FLAG_S) != 0 ? FLAG_S : 0;
@@ -1191,7 +1408,6 @@ int z80_step(Z80_State* state) {
     state->f &= ~FLAG_H;
     state->f |= (state->a == 0) ? FLAG_Z : 0;
     break;
-
   case 0xB2: // OR D
     state->a = state->a | state->d;
     state->f = (state->a & FLAG_S) != 0 ? FLAG_S : 0;
@@ -1199,7 +1415,6 @@ int z80_step(Z80_State* state) {
     state->f &= ~FLAG_H;
     state->f |= (state->a == 0) ? FLAG_Z : 0;
     break;
-
   case 0xB3: // OR E
     state->a = state->a | state->e;
     state->f = (state->a & FLAG_S) != 0 ? FLAG_S : 0;
@@ -1207,7 +1422,6 @@ int z80_step(Z80_State* state) {
     state->f &= ~FLAG_H;
     state->f |= (state->a == 0) ? FLAG_Z : 0;
     break;
-
   case 0xB4: // OR H
     state->a = state->a | state->h;
     state->f = (state->a & FLAG_S) != 0 ? FLAG_S : 0;
@@ -1215,7 +1429,6 @@ int z80_step(Z80_State* state) {
     state->f &= ~FLAG_H;
     state->f |= (state->a == 0) ? FLAG_Z : 0;
     break;
-
   case 0xB5: // OR L
     state->a = state->a | state->l;
     state->f = (state->a & FLAG_S) != 0 ? FLAG_S : 0;
@@ -1223,7 +1436,6 @@ int z80_step(Z80_State* state) {
     state->f &= ~FLAG_H;
     state->f |= (state->a == 0) ? FLAG_Z : 0;
     break;
-
   case 0xB6: // OR (HL)
     state->a = state->a | mem_read(state->hl);
     state->f = (state->a & FLAG_S) != 0 ? FLAG_S : 0;
@@ -1231,7 +1443,6 @@ int z80_step(Z80_State* state) {
     state->f &= ~FLAG_H;
     state->f |= (state->a == 0) ? FLAG_Z : 0;
     break;
-
   case 0xB7: // OR A
     state->a = state->a | state->a;
     state->f = (state->a & FLAG_S) != 0 ? FLAG_S : 0;
@@ -1239,7 +1450,6 @@ int z80_step(Z80_State* state) {
     state->f &= ~FLAG_H;
     state->f |= (state->a == 0) ? FLAG_Z : 0;
     break;
-
   case 0xB8: // CP B
     temp = state->a - state->b;
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -1248,7 +1458,6 @@ int z80_step(Z80_State* state) {
     state->f |= (temp == 0) ? FLAG_Z : 0;
     state->f |= (state->a < state->b) ? FLAG_N : 0;
     break;
-
   case 0xB9: // CP C
     temp = state->a - state->c;
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -1257,7 +1466,6 @@ int z80_step(Z80_State* state) {
     state->f |= (temp == 0) ? FLAG_Z : 0;
     state->f |= (state->a < state->c) ? FLAG_N : 0;
     break;
-
   case 0xBA: // CP D
     temp = state->a - state->d;
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -1266,7 +1474,6 @@ int z80_step(Z80_State* state) {
     state->f |= (temp == 0) ? FLAG_Z : 0;
     state->f |= (state->a < state->d) ? FLAG_N : 0;
     break;
-
   case 0xBB: // CP E
     temp = state->a - state->e;
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -1275,7 +1482,6 @@ int z80_step(Z80_State* state) {
     state->f |= (temp == 0) ? FLAG_Z : 0;
     state->f |= (state->a < state->e) ? FLAG_N : 0;
     break;
-
   case 0xBC: // CP H
     temp = state->a - state->h;
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -1284,7 +1490,6 @@ int z80_step(Z80_State* state) {
     state->f |= (temp == 0) ? FLAG_Z : 0;
     state->f |= (state->a < state->h) ? FLAG_N : 0;
     break;
-
   case 0xBD: // CP L
     temp = state->a - state->l;
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -1293,7 +1498,6 @@ int z80_step(Z80_State* state) {
     state->f |= (temp == 0) ? FLAG_Z : 0;
     state->f |= (state->a < state->l) ? FLAG_N : 0;
     break;
-
   case 0xBE: // CP (HL)
     temp = state->a - mem_read(state->hl);
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -1302,7 +1506,6 @@ int z80_step(Z80_State* state) {
     state->f |= (temp == 0) ? FLAG_Z : 0;
     state->f |= (state->a < mem_read(state->hl)) ? FLAG_N : 0;
     break;
-
   case 0xBF: // CP A
     temp = state->a - state->a;
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -1311,30 +1514,127 @@ int z80_step(Z80_State* state) {
     state->f |= (temp == 0) ? FLAG_Z : 0;
     state->f |= (state->a < state->a) ? FLAG_N : 0;
     break;
-
+  case 0xC0:
+    if ((state->f & FLAG_Z) == 0) {
+      state->pc = mem_read16(state->sp);
+      state->sp += 2;
+    }
+    else {
+      state->pc += 2;
+    }
+    break;
+  case 0xC1: // POP BC
+    state->bc = pop16(state);
+    break;
+  case 0xC2: // JP NZ, nn
+    temp16 = mem_read16(state->pc + 1);
+    if ((state->f & FLAG_Z) == 0) {
+      state->pc = temp16;
+    }
+    break;
+  case 0xC3: // JP nn
+    state->pc = mem_read16(state->pc + 1);
+    break;
+  case 0xC4: // CALL NZ, nn
+    temp16 = mem_read16(state->pc + 1);
+    if ((state->f & FLAG_Z) == 0) {
+      push16(state, state->pc + 3);
+      state->pc = temp16;
+    }
+    break;
+  case 0xC5: // PUSH BC
+    push16(state, state->bc);
+    break;
   case 0xC6: // ADD A, n
-    uint8_t n = mem_read(state->pc + 1);
-    temp = state->a + n;
+    temp = state->a + mem_read(state->pc + 1);
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
     state->f |= (temp & 0x08) != 0 ? FLAG_PV : 0;
-    state->f |= (state->a & 0x0F) + (n & 0x0F) > 0x0F ? FLAG_H : 0;
+    state->f |= (state->a & 0x0F) + (mem_read(state->pc + 1) & 0x0F) > 0x0F ? FLAG_H : 0;
     state->f |= (temp == 0) ? FLAG_Z : 0;
-    state->f &= ~FLAG_N;
+    state->f |= (state->a < mem_read(state->pc + 1)) ? FLAG_N : 0;
     state->a = temp;
+    state->pc += 2;
     break;
-
+  case 0xC7: // RST 0
+    push16(state, state->pc + 1);
+    state->pc = 0x0000;
+    break;
+  case 0xC8: // RET Z
+    if ((state->f & FLAG_Z) != 0) {
+      state->pc = mem_read16(state->sp);
+      state->sp += 2;
+    }
+    break;
+  case 0xC9: // RET
+    state->pc = mem_read16(state->sp);
+    state->sp += 2;
+    break;
+  case 0xCA: // JP Z, nn
+    temp16 = mem_read16(state->pc + 1);
+    if ((state->f & FLAG_Z) != 0) {
+      state->pc = temp16;
+    }
+    break;
+  case 0xCB: // CB prefixed instructions
+    return decode_cb(state);
+  case 0xCC: // CALL Z, nn
+    temp16 = mem_read16(state->pc + 1);
+    if ((state->f & FLAG_Z) != 0) {
+      push16(state, state->pc + 3);
+      state->pc = temp16;
+    }
+    break;
+  case 0xCD: // CALL nn
+    temp16 = mem_read16(state->pc + 1);
+    push16(state, state->pc + 3);
+    state->pc = temp16;
+    break;
   case 0xCE: // ADC A, n
-    n = mem_read(state->pc + 1);
-    carry = (state->f & FLAG_C) != 0 ? 1 : 0;
-    temp = state->a + n + carry;
+    temp = state->a + mem_read(state->pc + 1);
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
     state->f |= (temp & 0x08) != 0 ? FLAG_PV : 0;
-    state->f |= (state->a & 0x0F) + (n & 0x0F) + carry > 0x0F ? FLAG_H : 0;
+    state->f |= (state->a & 0x0F) + (mem_read(state->pc + 1) & 0x0F) > 0x0F ? FLAG_H : 0;
     state->f |= (temp == 0) ? FLAG_Z : 0;
-    state->f &= ~FLAG_N;
+    state->f |= (state->a < mem_read(state->pc + 1)) ? FLAG_N : 0;
+    state->f |= (state->a & 0x0F) < (mem_read(state->pc + 1) & 0x0F) ? FLAG_C : 0;
     state->a = temp;
+    state->pc += 2;
     break;
-
+  case 0xCF: // RST 8
+    push16(state, state->pc + 1);
+    state->pc = 0x0038;
+    break;
+  case 0xD0: // RET NC
+    if ((state->f & FLAG_C) == 0) {
+      state->pc = mem_read16(state->sp);
+      state->sp += 2;
+    }
+    break;
+  case 0xD1: // POP DE
+    state->de = pop16(state);
+    break;
+  case 0xD2: // JP NC, nn
+    temp16 = mem_read16(state->pc + 1);
+    if ((state->f & FLAG_C) == 0) {
+      state->pc = temp16;
+    }
+    break;
+  case 0xD3: // OUT (n), A
+    n = mem_read(state->pc + 1);
+    // output_port(n, state->a);
+    printf("TODO: Output port %02X: %02X\n", n, state->a);
+    state->pc += 2;
+    break;
+  case 0xD4: // CALL NC, nn
+    temp16 = mem_read16(state->pc + 1);
+    if ((state->f & FLAG_C) == 0) {
+      push16(state, state->pc + 3);
+      state->pc = temp16;
+    }
+    break;
+  case 0xD5: // PUSH DE
+    push16(state, state->de);
+    break;
   case 0xD6: // SUB n
     n = mem_read(state->pc + 1);
     temp = state->a - n;
@@ -1345,7 +1645,50 @@ int z80_step(Z80_State* state) {
     state->f |= FLAG_N;
     state->a = temp;
     break;
-
+  case 0xD7: // RST 10
+    push16(state, state->pc + 1);
+    state->pc = 0x0010;
+    break;
+  case 0xD8: // RET C
+    if ((state->f & FLAG_C) != 0) {
+      state->pc = mem_read16(state->sp);
+      state->sp += 2;
+    }
+    break;
+  case 0xD9: // EXX
+    temp16 = state->bc;
+    state->bc = state->bc_;
+    state->bc_ = temp16;
+    temp16 = state->de;
+    state->de = state->de_;
+    state->de_ = temp16;
+    temp16 = state->hl;
+    state->hl = state->hl_;
+    state->hl_ = temp16;
+    state->pc += 1;
+    break;
+  case 0xDA: // JP C, nn
+    temp16 = mem_read16(state->pc + 1);
+    if ((state->f & FLAG_C) != 0) {
+      state->pc = temp16;
+    }
+    break;
+  case 0xDB: // IN A, (n)
+    n = mem_read(state->pc + 1);
+    state->a = 0; // input_port(n);
+    printf("TODO: Input port %02X\n", n);
+    state->pc += 2;
+    break;
+  case 0xDC: // CALL C, nn
+    temp16 = mem_read16(state->pc + 1);
+    if ((state->f & FLAG_C) != 0) {
+      push16(state, state->pc + 3);
+      state->pc = temp16;
+    }
+    break;
+  case 0xDD: // DD prefix
+    return decode_dd(state);
+    break;
   case 0xDE: // SBC A, n
     n = mem_read(state->pc + 1);
     carry = (state->f & FLAG_C) != 0 ? 1 : 0;
@@ -1357,7 +1700,41 @@ int z80_step(Z80_State* state) {
     state->f |= FLAG_N;
     state->a = temp;
     break;
-
+  case 0xDF: // RST 30H
+    push16(state, state->pc + 1);
+    state->pc = 0x30;
+    break;
+  case 0xE0: // RET PO
+    if ((state->f & FLAG_PV) == 0) {
+      state->pc = mem_read16(state->sp);
+      state->sp += 2;
+    }
+    break;
+  case 0xE1: // POP HL
+    state->hl = mem_read16(state->sp);
+    state->sp += 2;
+    break;
+  case 0xE2: // JP PO, nn
+    temp16 = mem_read16(state->pc + 1);
+    if ((state->f & FLAG_PV) == 0) {
+      state->pc = temp16;
+    }
+    break;
+  case 0xE3: // EX (SP), HL
+    temp16 = mem_read16(state->sp);
+    mem_write16(state->sp, state->hl);
+    state->hl = temp16;
+    break;
+  case 0xE4: // CALL PO, nn
+    temp16 = mem_read16(state->pc + 1);
+    if ((state->f & FLAG_PV) == 0) {
+      push16(state, state->pc + 3);
+      state->pc = temp16;
+    }
+    break;
+  case 0xE5: // PUSH HL
+    push16(state, state->hl);
+    break;
   case 0xE6: // AND n
     n = mem_read(state->pc + 1);
     state->a &= n;
@@ -1368,7 +1745,41 @@ int z80_step(Z80_State* state) {
     state->f |= (state->a == 0) ? FLAG_Z : 0;
     state->f &= ~FLAG_N;
     break;
-
+  case 0xE7: // RST 20H
+    push16(state, state->pc + 1);
+    state->pc = 0x20;
+    break;
+  case 0xE8: // RET PE
+    if ((state->f & FLAG_PV) != 0) {
+      state->pc = mem_read16(state->sp);
+      state->sp += 2;
+    }
+    break;
+  case 0xE9: // JP PE, nn
+    temp16 = mem_read16(state->pc + 1);
+    if ((state->f & FLAG_PV) != 0) {
+      state->pc = temp16;
+    }
+    break;
+  case 0xEA: // JP C, nn
+    temp16 = mem_read16(state->pc + 1);
+    if ((state->f & FLAG_C) != 0) {
+      state->pc = temp16;
+    }
+    break;
+  case 0xEB: // XB EE
+    printf("Unknown opcode: %02X\n", opcode);
+    return 0;
+    break;
+  case 0xEC: // CALL C, nn
+    temp16 = mem_read16(state->pc + 1);
+    if ((state->f & FLAG_C) != 0) {
+      push16(state, state->pc + 3);
+      state->pc = temp16;
+    }
+    break;
+  case 0xED: // ED-prefixed opcodes
+    return decode_ed(state);
   case 0xEE: // XOR n
     n = mem_read(state->pc + 1);
     state->a ^= n;
@@ -1379,7 +1790,6 @@ int z80_step(Z80_State* state) {
     state->f |= (state->a == 0) ? FLAG_Z : 0;
     state->f &= ~FLAG_N;
     break;
-
   case 0xEF: // RST 28H
     temp16 = state->pc;
     state->sp -= 2;
@@ -1387,7 +1797,38 @@ int z80_step(Z80_State* state) {
     mem_write(state->sp + 1, temp & 0xFF);
     state->pc = 0x28;
     break;
-
+  case 0xF0: // RET P
+    if ((state->f & FLAG_S) == 0) {
+      state->pc = mem_read16(state->sp);
+      state->sp += 2;
+    }
+    break;
+  case 0xF1: // POP AF
+    state->af = mem_read16(state->sp);
+    state->sp += 2;
+    break;
+  case 0xF2: // JP P, nn
+    temp16 = mem_read16(state->pc + 1);
+    if ((state->f & FLAG_S) == 0) {
+      state->pc = temp16;
+    }
+    break;
+  case 0xF3: // DI
+    state->iff1 = 0;
+    state->iff2 = 0;
+    break;
+  case 0xF4: // CALL P, nn
+    temp16 = mem_read16(state->pc + 1);
+    if ((state->f & FLAG_S) == 0) {
+      push16(state, state->pc + 3);
+      state->pc = temp16;
+    }
+    break;
+  case 0xF5: // PUSH AF
+    state->sp -= 2;
+    mem_write(state->sp, (state->af >> 8) & 0xFF);
+    mem_write(state->sp + 1, state->af & 0xFF);
+    break;
   case 0xF6: // OR n
     n = mem_read(state->pc + 1);
     state->a |= n;
@@ -1398,7 +1839,37 @@ int z80_step(Z80_State* state) {
     state->f |= (state->a == 0) ? FLAG_Z : 0;
     state->f &= ~FLAG_N;
     break;
-
+  case 0xF7: // RST 30H
+    push16(state, state->pc + 1);
+    state->pc = 0x30;
+    break;
+  case 0xF8: // RET M
+    if ((state->f & FLAG_S) != 0) {
+      state->pc = mem_read16(state->sp);
+      state->sp += 2;
+    }
+    break;
+  case 0xF9: // LD SP, HL
+    state->sp = state->hl;
+    break;
+  case 0xFA: // JP M, nn
+    temp16 = mem_read16(state->pc + 1);
+    if ((state->f & FLAG_S) != 0) {
+      state->pc = temp16;
+    }
+    break;
+  case 0xFB: // EI
+    state->iff1 = state->iff2 = 1;
+    break;
+  case 0xFC: // CALL M, nn
+    temp16 = mem_read16(state->pc + 1);
+    if ((state->f & FLAG_S) != 0) {
+      push16(state, state->pc + 3);
+      state->pc = temp16;
+    }
+    break;
+  case 0xFD: // FD prefix
+    return decode_fd(state);
   case 0xFE: // CP n
     n = mem_read(state->pc + 1);
     temp = state->a - n;
@@ -1408,174 +1879,10 @@ int z80_step(Z80_State* state) {
     state->f |= (temp == 0) ? FLAG_Z : 0;
     state->f |= (state->a < n) ? FLAG_N : 0;
     break;
-
-    // Increment/Decrement Group
-  case 0x04: { // INC B
-    res = state->b + 1;
-    CLR_FLAG(state, FLAG_N);
-    if ((state->b & 0x0F) == 0x0F) SET_FLAG(state, FLAG_H);
-    state->b = res;
-    UPDATE_SZP(state, res);
+  case 0xFF: // RST 38H
+    push16(state, state->pc + 1);
+    state->pc = 0x38;
     break;
-  }
-
-  case 0x05: { // DEC B
-    res = state->b - 1;
-    SET_FLAG(state, FLAG_N);
-    if ((state->b & 0x0F) == 0) SET_FLAG(state, FLAG_H);
-    state->b = res;
-    UPDATE_SZP(state, res);
-    break;
-  }
-           // Control flow instructions 
-  case 0x10: // DJNZ n
-    temp = mem_read(state->pc + 1);
-    state->b--;
-    if (state->b != 0) {
-      state->pc += temp;
-    }
-    break;
-
-  case 0x18: // JR n
-    temp = mem_read(state->pc + 1);
-    state->pc += temp;
-    break;
-
-  case 0x20: // JR NZ, n
-    temp = mem_read(state->pc + 1);
-    if ((state->f & FLAG_Z) == 0) {
-      state->pc += temp;
-    }
-    break;
-
-  case 0x28: // JR Z, n
-    temp = mem_read(state->pc + 1);
-    if ((state->f & FLAG_Z) != 0) {
-      state->pc += temp;
-    }
-    break;
-
-  case 0x30: // JR NC, n
-    temp = mem_read(state->pc + 1);
-    if ((state->f & FLAG_C) == 0) {
-      state->pc += temp;
-    }
-    break;
-
-  case 0x38: // JR C, n
-    temp = mem_read(state->pc + 1);
-    if ((state->f & FLAG_C) != 0) {
-      state->pc += temp;
-    }
-    break;
-
-  case 0xC2: // JP NZ, nn
-    temp16 = mem_read16(state->pc + 1);
-    if ((state->f & FLAG_Z) == 0) {
-      state->pc = temp16;
-    }
-    break;
-
-  case 0xC4: // CALL NZ, nn
-    temp16 = mem_read16(state->pc + 1);
-    if ((state->f & FLAG_Z) == 0) {
-      push16(state, state->pc + 3);
-      state->pc = temp16;
-    }
-    break;
-
-  case 0xCA: // JP Z, nn
-    temp16 = mem_read16(state->pc + 1);
-    if ((state->f & FLAG_Z) != 0) {
-      state->pc = temp16;
-    }
-    break;
-
-  case 0xCC: // CALL Z, nn
-    temp16 = mem_read16(state->pc + 1);
-    if ((state->f & FLAG_Z) != 0) {
-      push16(state, state->pc + 3);
-      state->pc = temp16;
-    }
-    break;
-
-  case 0xD2: // JP NC, nn
-    temp16 = mem_read16(state->pc + 1);
-    if ((state->f & FLAG_C) == 0) {
-      state->pc = temp16;
-    }
-    break;
-
-  case 0xD4: // CALL NC, nn
-    temp16 = mem_read16(state->pc + 1);
-    if ((state->f & FLAG_C) == 0) {
-      push16(state, state->pc + 3);
-      state->pc = temp16;
-    }
-    break;
-
-  case 0xDA: // JP C, nn
-    temp16 = mem_read16(state->pc + 1);
-    if ((state->f & FLAG_C) != 0) {
-      state->pc = temp16;
-    }
-    break;
-
-  case 0xDC: // CALL C, nn
-    temp16 = mem_read16(state->pc + 1);
-    if ((state->f & FLAG_C) != 0) {
-      push16(state, state->pc + 3);
-      state->pc = temp16;
-    }
-    break;
-
-  case 0xF3: // DI
-    state->iff1 = state->iff2 = 0;
-    break;
-
-  case 0xFB: // EI
-    state->iff1 = state->iff2 = 1;
-    break;
-
-    // Miscellaneous instructions
-  case 0x08: // EX AF, AF'
-    uint8_t tempA = state->a;
-    uint8_t tempF = state->f;
-    state->a = state->a_;
-    state->f = state->f_;
-    state->a_ = tempA;
-    state->f_ = tempF;
-    break;
-
-  case 0xD3: // OUT (n), A
-    port = mem_read(state->pc++);
-    // Implement I/O write to 'port' with 'state->a' here
-    // Example: io_write(port, state->a);
-    break;
-
-  case 0xDB: // IN A, (n)
-    port = mem_read(state->pc++);
-    // Implement I/O read from 'port' to 'state->a' here
-    // Example: state->a = io_read(port);
-    break;
-
-  case 0xE3: // EX (SP), HL
-    uint16_t tempHL = state->hl;
-    state->hl = pop16(state);
-    push16(state, tempHL);
-    break;
-
-  case 0xE9: // JP (HL)
-    state->pc = state->hl;
-    break;
-
-  case 0xF9: // LD SP, HL
-    state->sp = state->hl;
-    break;
-
-  case 0xCB:
-    return decode_cb(state); // CB prefixed instructions           
-
   default:
     fprintf(stderr, "Unimplemented opcode: 0x%02X at 0x%04X\n",
       opcode, state->pc - 1);

@@ -149,3 +149,9 @@ void mem_write(uint32_t addr, uint8_t value) {
   if (addr >= MEM_SIZE) return;
   memory[addr] = value;
 }
+
+void mem_write16(uint32_t addr, uint8_t value) {
+  if (addr >= MEM_SIZE) return;
+  memory[addr + 1] = value >> 8;
+  memory[addr] = value & 0xFF;
+}

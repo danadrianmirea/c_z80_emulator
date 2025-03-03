@@ -16,7 +16,10 @@ typedef struct {
     uint16_t ix, iy;
 
     // Alternate register set
-    uint8_t a_, f_, b_, c_, d_, e_, h_, l_;
+    union { struct { uint8_t f_, a_; }; uint16_t af_; };
+    union { struct { uint8_t c_, b_; }; uint16_t bc_; };
+    union { struct { uint8_t e_, d_; }; uint16_t de_; };
+    union { struct { uint8_t l_, h_; }; uint16_t hl_; };
 
     // Control flags
     uint8_t iff1, iff2;
@@ -53,12 +56,17 @@ typedef struct {
 uint8_t mem_read(uint32_t addr);
 uint16_t mem_read16(uint32_t addr);
 void mem_write(uint32_t addr, uint8_t val);
+void mem_write16(uint32_t addr, uint8_t val);
 
 // Core functions
 void z80_init(Z80_State* state);
 int decode_cb(Z80_State* state);
+int decode_dd(Z80_State* state);
+int decode_ddcb(Z80_State* state);
+int decode_ed(Z80_State* state);
+int decode_fd(Z80_State* state);
+int decode_fdcb(Z80_State* state);
 int z80_step(Z80_State* state);
-
 
 // Stack operations
 void push16(Z80_State* state, uint16_t val);
