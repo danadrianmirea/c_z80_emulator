@@ -1,7 +1,53 @@
-#ifndef CPU_H
-#define CPU_H
+#ifndef Z80_H
+#define Z80_H
 
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <string.h>
+
+#define MEM_SIZE 65536
+#define ROM_START 0x0000
+#define ROM_END 0x3FFF   // 16KB ROM area
+#define RAM_START 0x4000
+#define RAM_END 0xFFFF
+#define ROM_SIZE 0x4000  // 16KB
+#define RAM_SIZE 0xC000  // 48KB
+#define SCREEN_WIDTH 256
+#define SCREEN_HEIGHT 192
+#define SCALE_FACTOR 2
+
+enum RETURN_CODES
+{
+    RETCODE_NO_ERROR = 0,
+    RETCODE_INVALID_ARGUMENTS,
+    RETCODE_ROM_LOADING_FAILED,
+    RETCODE_Z80_SNAPSHOT_LOADING_FAILED
+};
+
+enum Z80_VERSION
+{
+    Z80_VERSION_1 = 1,
+    Z80_VERSION_2,
+    Z80_VERSION_3
+};
+
+// Flag update macros
+#define UPDATE_FLAGS_ADD(result, operand) \
+    CLR_FLAG(FLAG_Z | FLAG_S | FLAG_H | FLAG_C); \
+    if((result) == 0) SET_FLAG(FLAG_Z); \
+    if((result) & 0x80) SET_FLAG(FLAG_S); \
+    if(((operand) & 0x0F) + ((a) & 0x0F) > 0x0F) SET_FLAG(FLAG_H); \
+    if((uint16_t)(operand) + (uint16_t)(a) > 0xFF) SET_FLAG(FLAG_C);
+
+#define UPDATE_FLAGS_SUB(result, operand) \
+    CLR_FLAG(FLAG_Z | FLAG_S | FLAG_H | FLAG_C); \
+    if((result) == 0) SET_FLAG(FLAG_Z); \
+    if((result) & 0x80) SET_FLAG(FLAG_S); \
+    if(((operand) & 0x0F) > (a & 0x0F)) SET_FLAG(FLAG_H); \
+    if((operand) > a) SET_FLAG(FLAG_C);
 
 // Register State
 typedef struct {
@@ -53,12 +99,18 @@ typedef struct {
 } while(0)
 
 // Memory interface
+bool load_rom(const char* filename);
+bool load_z80_snapshot(const char* filename);
+uint8_t input_port(Z80_State* state, uint8_t port);
+void output_port(Z80_State* state, uint8_t port, uint8_t val);
 uint8_t mem_read(uint32_t addr);
 uint16_t mem_read16(uint32_t addr);
 void mem_write(uint32_t addr, uint8_t val);
 void mem_write16(uint32_t addr, uint8_t val);
 
 // Core functions
+void display_update();
+void input_handle();
 void z80_init(Z80_State* state);
 int decode_cb(Z80_State* state);
 int decode_dd(Z80_State* state);

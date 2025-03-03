@@ -2,15 +2,13 @@
 
 # List source files
 set(SOURCES
-    cpu.c
-    memory.c
+    z80.c
     main.c
 )
 
 # List header files (optional, for IDE support)
 set(HEADERS
-    cpu.h
-    zx_spectrum.h
+    z80.h
 )
 
 # Add executable target
