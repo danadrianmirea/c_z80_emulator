@@ -1,5 +1,5 @@
 /* main.c */
-#include "z80.h"
+#include "zx_spectrum.h"
 #define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
 #include <stdio.h>
