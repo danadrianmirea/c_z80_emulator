@@ -310,6 +310,16 @@ int main(int argc, char* argv[]) {
     z80_step(&z80_state);
     display_update(memory);
     input_handle(&z80_state);
+
+    /*
+    static uint32_t last_time = 0;
+    uint32_t current_time = SDL_GetTicks();
+    uint32_t delta_time = current_time - last_time;
+    last_time = current_time;
+    uint32_t instructions_per_ms = 3500000 / 1000;
+    uint32_t delay = (1000000000 / 3500000) / instructions_per_ms - delta_time;
+    if (delay > 0) SDL_Delay(delay);
+    */
   }
 
   display_cleanup();
