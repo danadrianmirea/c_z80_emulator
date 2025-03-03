@@ -432,6 +432,7 @@ int z80_step(Z80_State* state) {
     state->f |= (state->a ^ state->a ^ temp) & FLAG_C;
     state->a = temp;
     break;
+    
   case 0x88: // ADC A, B
     temp = state->a + state->b + (state->f & FLAG_C);
     state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
@@ -517,6 +518,181 @@ int z80_step(Z80_State* state) {
     state->f |= (temp == 0) ? FLAG_Z : 0;
     state->f &= ~FLAG_N;
     state->f |= (state->a ^ state->a ^ temp) & FLAG_C;
+    state->a = temp;
+    break;
+
+  case 0x90: // SUB B
+    temp = state->a - state->b;
+    state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
+    state->f |= (temp & 0x08) != 0 ? FLAG_PV : 0;
+    state->f |= (state->a & 0x0F) < (state->b & 0x0F) ? FLAG_H : 0;
+    state->f |= (temp == 0) ? FLAG_Z : 0;
+    state->f |= FLAG_N;
+    state->f |= (state->a < state->b) ? FLAG_C : 0;
+    state->a = temp;
+    break;
+
+  case 0x91: // SUB C
+    temp = state->a - state->c;
+    state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
+    state->f |= (temp & 0x08) != 0 ? FLAG_PV : 0;
+    state->f |= (state->a & 0x0F) < (state->c & 0x0F) ? FLAG_H : 0;
+    state->f |= (temp == 0) ? FLAG_Z : 0;
+    state->f |= FLAG_N;
+    state->f |= (state->a < state->c) ? FLAG_C : 0;
+    state->a = temp;
+    break;
+
+  case 0x92: // SUB D
+    temp = state->a - state->d;
+    state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
+    state->f |= (temp & 0x08) != 0 ? FLAG_PV : 0;
+    state->f |= (state->a & 0x0F) < (state->d & 0x0F) ? FLAG_H : 0;
+    state->f |= (temp == 0) ? FLAG_Z : 0;
+    state->f |= FLAG_N;
+    state->f |= (state->a < state->d) ? FLAG_C : 0;
+    state->a = temp;
+    break;
+
+  case 0x93: // SUB E
+    temp = state->a - state->e;
+    state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
+    state->f |= (temp & 0x08) != 0 ? FLAG_PV : 0;
+    state->f |= (state->a & 0x0F) < (state->e & 0x0F) ? FLAG_H : 0;
+    state->f |= (temp == 0) ? FLAG_Z : 0;
+    state->f |= FLAG_N;
+    state->f |= (state->a < state->e) ? FLAG_C : 0;
+    state->a = temp;
+    break;
+
+  case 0x94: // SUB H
+    temp = state->a - state->h;
+    state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
+    state->f |= (temp & 0x08) != 0 ? FLAG_PV : 0;
+    state->f |= (state->a & 0x0F) < (state->h & 0x0F) ? FLAG_H : 0;
+    state->f |= (temp == 0) ? FLAG_Z : 0;
+    state->f |= FLAG_N;
+    state->f |= (state->a < state->h) ? FLAG_C : 0;
+    state->a = temp;
+    break;
+
+  case 0x95: // SUB L
+    temp = state->a - state->l;
+    state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
+    state->f |= (temp & 0x08) != 0 ? FLAG_PV : 0;
+    state->f |= (state->a & 0x0F) < (state->l & 0x0F) ? FLAG_H : 0;
+    state->f |= (temp == 0) ? FLAG_Z : 0;
+    state->f |= FLAG_N;
+    state->f |= (state->a < state->l) ? FLAG_C : 0;
+    state->a = temp;
+    break;
+
+  case 0x96: // SUB (HL)
+    temp = state->a - mem_read(state->hl);
+    state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
+    state->f |= (temp & 0x08) != 0 ? FLAG_PV : 0;
+    state->f |= (state->a & 0x0F) < (mem_read(state->hl) & 0x0F) ? FLAG_H : 0;
+    state->f |= (temp == 0) ? FLAG_Z : 0;
+    state->f |= FLAG_N;
+    state->f |= (state->a < mem_read(state->hl)) ? FLAG_C : 0;
+    state->a = temp;
+    break;
+
+  case 0x97: // SUB A
+    temp = state->a - state->a;
+    state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
+    state->f |= (temp & 0x08) != 0 ? FLAG_PV : 0;
+    state->f |= (state->a & 0x0F) < (state->a & 0x0F) ? FLAG_H : 0;
+    state->f |= (temp == 0) ? FLAG_Z : 0;
+    state->f |= FLAG_N;
+    state->f |= (state->a < state->a) ? FLAG_C : 0;
+    state->a = temp;
+    break;
+  case 0x98: // SBC A, B
+    temp = state->a - state->b - (state->f & FLAG_C);
+    state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
+    state->f |= (temp & 0x08) != 0 ? FLAG_PV : 0;
+    state->f |= (state->a & 0x0F) < (state->b & 0x0F) + (state->f & FLAG_C) ? FLAG_H : 0;
+    state->f |= (temp == 0) ? FLAG_Z : 0;
+    state->f |= FLAG_N;
+    state->f |= (state->a < state->b + (state->f & FLAG_C)) ? FLAG_C : 0;
+    state->a = temp;
+    break;
+
+  case 0x99: // SBC A, C
+    temp = state->a - state->c - (state->f & FLAG_C);
+    state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
+    state->f |= (temp & 0x08) != 0 ? FLAG_PV : 0;
+    state->f |= (state->a & 0x0F) < (state->c & 0x0F) + (state->f & FLAG_C) ? FLAG_H : 0;
+    state->f |= (temp == 0) ? FLAG_Z : 0;
+    state->f |= FLAG_N;
+    state->f |= (state->a < state->c + (state->f & FLAG_C)) ? FLAG_C : 0;
+    state->a = temp;
+    break;
+
+  case 0x9A: // SBC A, D
+    temp = state->a - state->d - (state->f & FLAG_C);
+    state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
+    state->f |= (temp & 0x08) != 0 ? FLAG_PV : 0;
+    state->f |= (state->a & 0x0F) < (state->d & 0x0F) + (state->f & FLAG_C) ? FLAG_H : 0;
+    state->f |= (temp == 0) ? FLAG_Z : 0;
+    state->f |= FLAG_N;
+    state->f |= (state->a < state->d + (state->f & FLAG_C)) ? FLAG_C : 0;
+    state->a = temp;
+    break;
+
+  case 0x9B: // SBC A, E
+    temp = state->a - state->e - (state->f & FLAG_C);
+    state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
+    state->f |= (temp & 0x08) != 0 ? FLAG_PV : 0;
+    state->f |= (state->a & 0x0F) < (state->e & 0x0F) + (state->f & FLAG_C) ? FLAG_H : 0;
+    state->f |= (temp == 0) ? FLAG_Z : 0;
+    state->f |= FLAG_N;
+    state->f |= (state->a < state->e + (state->f & FLAG_C)) ? FLAG_C : 0;
+    state->a = temp;
+    break;
+
+  case 0x9C: // SBC A, H
+    temp = state->a - state->h - (state->f & FLAG_C);
+    state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
+    state->f |= (temp & 0x08) != 0 ? FLAG_PV : 0;
+    state->f |= (state->a & 0x0F) < (state->h & 0x0F) + (state->f & FLAG_C) ? FLAG_H : 0;
+    state->f |= (temp == 0) ? FLAG_Z : 0;
+    state->f |= FLAG_N;
+    state->f |= (state->a < state->h + (state->f & FLAG_C)) ? FLAG_C : 0;
+    state->a = temp;
+    break;
+
+  case 0x9D: // SBC A, L
+    temp = state->a - state->l - (state->f & FLAG_C);
+    state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
+    state->f |= (temp & 0x08) != 0 ? FLAG_PV : 0;
+    state->f |= (state->a & 0x0F) < (state->l & 0x0F) + (state->f & FLAG_C) ? FLAG_H : 0;
+    state->f |= (temp == 0) ? FLAG_Z : 0;
+    state->f |= FLAG_N;
+    state->f |= (state->a < state->l + (state->f & FLAG_C)) ? FLAG_C : 0;
+    state->a = temp;
+    break;
+
+  case 0x9E: // SBC A, (HL)
+    temp = state->a - mem_read(state->hl) - (state->f & FLAG_C);
+    state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
+    state->f |= (temp & 0x08) != 0 ? FLAG_PV : 0;
+    state->f |= (state->a & 0x0F) < (mem_read(state->hl) & 0x0F) + (state->f & FLAG_C) ? FLAG_H : 0;
+    state->f |= (temp == 0) ? FLAG_Z : 0;
+    state->f |= FLAG_N;
+    state->f |= (state->a < mem_read(state->hl) + (state->f & FLAG_C)) ? FLAG_C : 0;
+    state->a = temp;
+    break;
+
+  case 0x9F: // SBC A, A
+    temp = state->a - state->a - (state->f & FLAG_C);
+    state->f = (temp & FLAG_S) != 0 ? FLAG_S : 0;
+    state->f |= (temp & 0x08) != 0 ? FLAG_PV : 0;
+    state->f |= (state->a & 0x0F) < (state->a & 0x0F) + (state->f & FLAG_C) ? FLAG_H : 0;
+    state->f |= (temp == 0) ? FLAG_Z : 0;
+    state->f |= FLAG_N;
+    state->f |= (state->a < state->a + (state->f & FLAG_C)) ? FLAG_C : 0;
     state->a = temp;
     break;
 
