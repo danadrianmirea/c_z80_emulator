@@ -53,7 +53,7 @@ bool load_z80_snapshot(const char* filename, Z80_State* state) {
 
   // Read main header (at least 30 bytes)
   uint8_t header[58];
-  if (fread(header, 1, 30, file) != 30) {1
+  if (fread(header, 1, 30, file) != 30) {
     fclose(file);
     return false;
   }
