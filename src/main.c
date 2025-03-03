@@ -273,10 +273,6 @@ void print_usage(const char *program_name) {
   printf("Example: %s 48.rom game.z80\n", program_name);
 }
 
-#ifdef _WIN32
-#undef main
-#endif
-
 int main(int argc, char *argv[]) {
   if (argc < 3) {
     print_usage(argv[0]);
