@@ -55,7 +55,9 @@ void mem_write(uint32_t addr, uint8_t val);
 
 // Core functions
 void z80_init(Z80_State* state);
+int decode_cb(Z80_State* state);
 int z80_step(Z80_State* state);
+
 
 // Stack operations
 void push16(Z80_State* state, uint16_t val);
