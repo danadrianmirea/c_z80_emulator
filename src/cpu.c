@@ -383,6 +383,10 @@ int z80_step(Z80_State* state) {
   uint8_t port;
 
   switch (opcode) {
+
+  case 0x00: // NOP
+    break;
+
     // 8-bit Load Group
   case 0x06: // LD B,n
     state->b = mem_read(state->pc++);
