@@ -67,6 +67,9 @@ typedef struct {
     union { struct { uint8_t e_, d_; }; uint16_t de_; };
     union { struct { uint8_t l_, h_; }; uint16_t hl_; };
 
+    // R register
+    uint8_t r;
+
     // Control flags
     uint8_t iff1, iff2;
     uint8_t imode;
@@ -100,7 +103,7 @@ typedef struct {
 
 // Memory interface
 bool load_rom(const char* filename);
-bool load_z80_snapshot(const char* filename);
+bool load_z80_snapshot(const char* filename, Z80_State* state);
 uint8_t input_port(Z80_State* state, uint8_t port);
 void output_port(Z80_State* state, uint8_t port, uint8_t val);
 uint8_t mem_read(uint32_t addr);

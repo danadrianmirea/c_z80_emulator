@@ -44,7 +44,7 @@ bool load_rom(const char* path) {
   return true;
 }
 
-bool load_z80_snapshot(const char* filename) {
+bool load_z80_snapshot(const char* filename, Z80_State* state) {
   FILE* file = fopen(filename, "rb");
   if (!file) {
     perror("Failed to open Z80 file");
@@ -85,6 +85,19 @@ bool load_z80_snapshot(const char* filename) {
     // Original version 1 handling
     compressed = (header[12] & 0x20);
   }
+
+  // Read register state
+  state->pc = pc;
+  state->af = (header[0] << 8) | header[1];
+  state->bc = (header[2] << 8) | header[3];
+  state->de = (header[4] << 8) | header[5];
+  state->hl = (header[8] << 8) | header[9];
+  state->ix = (header[10] << 8) | header[11];
+  state->iy = (header[12] << 8) | header[13];
+  state->sp = (header[14] << 8) | header[15];
+  state->f = header[16];
+  state->imode = header[17];
+  state->r = header[18];
 
   // Get RAM data
   fseek(file, 0, SEEK_END);

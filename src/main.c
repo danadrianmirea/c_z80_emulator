@@ -292,7 +292,7 @@ int main(int argc, char* argv[]) {
   z80_init(&z80_state);
 
   const char* romName = argv[1];
-  const char* z80Name = argv[2];
+  const char* z80SnapshotName = argv[2];
 
   if (!load_rom(romName)) {
     display_cleanup();
@@ -300,16 +300,16 @@ int main(int argc, char* argv[]) {
     return RETCODE_ROM_LOADING_FAILED;
   }
 
-  if (!load_z80_snapshot(z80Name)) {
+  if (!load_z80_snapshot(z80SnapshotName, &z80_state)) {
     display_cleanup();
     printf("Error: Unable to load Z80 Snapshot\n");
     return RETCODE_Z80_SNAPSHOT_LOADING_FAILED;
   }
 
   while (1) {
-    z80_step(&z80_state);
-    display_update(memory);
     input_handle(&z80_state);
+    display_update(memory);
+    z80_step(&z80_state);
 
     /*
     static uint32_t last_time = 0;
