@@ -247,7 +247,6 @@ void display_cleanup() {
 }
 
 void perform_sleep() {
-
   static uint32_t last_time = 0;
   uint32_t current_time = SDL_GetTicks();
   uint32_t delta_time = current_time - last_time;
@@ -257,7 +256,13 @@ void perform_sleep() {
       (uint32_t)((1000000000.0 / 3500000.0) / instructions_per_ms);
   uint32_t delay = (delta_time < target_time) ? target_time - delta_time : 0;
   if (delay > 0)
-    SDL_Delay(delay);
+
+  SDL_Delay(delay);
+  /*
+  if ((current_time / LOGGING_INTERVAL_SLOW) % 2 == 0) {
+    printf("delta_time: %u, delay: %u\n", delta_time, delay);
+  }
+  */
 }
 
 void print_usage(const char *program_name) {
