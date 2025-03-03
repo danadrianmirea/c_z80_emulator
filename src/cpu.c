@@ -380,11 +380,49 @@ int z80_step(Z80_State* state) {
   uint8_t n;
   uint8_t carry;
   uint8_t res;
+  uint8_t port;
 
   switch (opcode) {
     // 8-bit Load Group
   case 0x06: // LD B,n
     state->b = mem_read(state->pc++);
+    break;
+
+  case 0x0A: // LD A,(BC)
+    state->a = mem_read(state->bc);
+    break;
+
+  case 0x1A: // LD A,(DE)
+    state->a = mem_read(state->de);
+    break;
+
+  case 0x2A: // LD HL,(nn)
+    temp16 = mem_read(state->pc++);
+    temp16 |= mem_read(state->pc++) << 8;
+    state->l = mem_read(temp16);
+    state->h = mem_read(temp16 + 1);
+    break;
+
+  case 0x3A: // LD A,(nn)
+    temp16 = mem_read(state->pc++);
+    temp16 |= mem_read(state->pc++) << 8;
+    state->a = mem_read(temp16);
+    break;
+
+  case 0x4A: // LD C,D
+    state->c = state->d;
+    break;
+
+  case 0x5A: // LD E,D
+    state->e = state->d;
+    break;
+
+  case 0x6A: // LD L,D
+    state->l = state->d;
+    break;
+
+  case 0x7A: // LD A,D
+    state->a = state->d;
     break;
 
   case 0x0E: // LD C,n
@@ -455,10 +493,6 @@ int z80_step(Z80_State* state) {
     state->c = state->c;
     break;
 
-  case 0x4A: // LD C,D
-    state->c = state->d;
-    break;
-
   case 0x4B: // LD C,E
     state->c = state->e;
     break;
@@ -517,10 +551,6 @@ int z80_step(Z80_State* state) {
 
   case 0x59: // LD E,C
     state->e = state->c;
-    break;
-
-  case 0x5A: // LD E,D
-    state->e = state->d;
     break;
 
   case 0x5B: // LD E,E
@@ -583,10 +613,6 @@ int z80_step(Z80_State* state) {
     state->l = state->c;
     break;
 
-  case 0x6A: // LD L,D
-    state->l = state->d;
-    break;
-
   case 0x6B: // LD L,E
     state->l = state->e;
     break;
@@ -645,10 +671,6 @@ int z80_step(Z80_State* state) {
 
   case 0x79: // LD A,C
     state->a = state->c;
-    break;
-
-  case 0x7A: // LD A,D
-    state->a = state->d;
     break;
 
   case 0x7B: // LD A,E
@@ -1401,6 +1423,151 @@ int z80_step(Z80_State* state) {
     UPDATE_SZP(state, res);
     break;
   }
+           // Control flow instructions 
+  case 0x10: // DJNZ n
+    temp = mem_read(state->pc + 1);
+    state->b--;
+    if (state->b != 0) {
+      state->pc += temp;
+    }
+    break;
+
+  case 0x18: // JR n
+    temp = mem_read(state->pc + 1);
+    state->pc += temp;
+    break;
+
+  case 0x20: // JR NZ, n
+    temp = mem_read(state->pc + 1);
+    if ((state->f & FLAG_Z) == 0) {
+      state->pc += temp;
+    }
+    break;
+
+  case 0x28: // JR Z, n
+    temp = mem_read(state->pc + 1);
+    if ((state->f & FLAG_Z) != 0) {
+      state->pc += temp;
+    }
+    break;
+
+  case 0x30: // JR NC, n
+    temp = mem_read(state->pc + 1);
+    if ((state->f & FLAG_C) == 0) {
+      state->pc += temp;
+    }
+    break;
+
+  case 0x38: // JR C, n
+    temp = mem_read(state->pc + 1);
+    if ((state->f & FLAG_C) != 0) {
+      state->pc += temp;
+    }
+    break;
+
+  case 0xC2: // JP NZ, nn
+    temp16 = mem_read16(state->pc + 1);
+    if ((state->f & FLAG_Z) == 0) {
+      state->pc = temp16;
+    }
+    break;
+
+  case 0xC4: // CALL NZ, nn
+    temp16 = mem_read16(state->pc + 1);
+    if ((state->f & FLAG_Z) == 0) {
+      push16(state, state->pc + 3);
+      state->pc = temp16;
+    }
+    break;
+
+  case 0xCA: // JP Z, nn
+    temp16 = mem_read16(state->pc + 1);
+    if ((state->f & FLAG_Z) != 0) {
+      state->pc = temp16;
+    }
+    break;
+
+  case 0xCC: // CALL Z, nn
+    temp16 = mem_read16(state->pc + 1);
+    if ((state->f & FLAG_Z) != 0) {
+      push16(state, state->pc + 3);
+      state->pc = temp16;
+    }
+    break;
+
+  case 0xD2: // JP NC, nn
+    temp16 = mem_read16(state->pc + 1);
+    if ((state->f & FLAG_C) == 0) {
+      state->pc = temp16;
+    }
+    break;
+
+  case 0xD4: // CALL NC, nn
+    temp16 = mem_read16(state->pc + 1);
+    if ((state->f & FLAG_C) == 0) {
+      push16(state, state->pc + 3);
+      state->pc = temp16;
+    }
+    break;
+
+  case 0xDA: // JP C, nn
+    temp16 = mem_read16(state->pc + 1);
+    if ((state->f & FLAG_C) != 0) {
+      state->pc = temp16;
+    }
+    break;
+
+  case 0xDC: // CALL C, nn
+    temp16 = mem_read16(state->pc + 1);
+    if ((state->f & FLAG_C) != 0) {
+      push16(state, state->pc + 3);
+      state->pc = temp16;
+    }
+    break;
+
+  case 0xF3: // DI
+    state->iff1 = state->iff2 = 0;
+    break;
+
+  case 0xFB: // EI
+    state->iff1 = state->iff2 = 1;
+    break;
+
+    // Miscellaneous instructions
+  case 0x08: // EX AF, AF'
+    uint8_t tempA = state->a;
+    uint8_t tempF = state->f;
+    state->a = state->a_;
+    state->f = state->f_;
+    state->a_ = tempA;
+    state->f_ = tempF;
+    break;
+
+  case 0xD3: // OUT (n), A
+    port = mem_read(state->pc++);
+    // Implement I/O write to 'port' with 'state->a' here
+    // Example: io_write(port, state->a);
+    break;
+
+  case 0xDB: // IN A, (n)
+    port = mem_read(state->pc++);
+    // Implement I/O read from 'port' to 'state->a' here
+    // Example: state->a = io_read(port);
+    break;
+
+  case 0xE3: // EX (SP), HL
+    uint16_t tempHL = state->hl;
+    state->hl = pop16(state);
+    push16(state, tempHL);
+    break;
+
+  case 0xE9: // JP (HL)
+    state->pc = state->hl;
+    break;
+
+  case 0xF9: // LD SP, HL
+    state->sp = state->hl;
+    break;
 
   case 0xCB:
     return decode_cb(state); // CB prefixed instructions           

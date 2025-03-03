@@ -51,6 +51,7 @@ typedef struct {
 
 // Memory interface
 uint8_t mem_read(uint32_t addr);
+uint16_t mem_read16(uint32_t addr);
 void mem_write(uint32_t addr, uint8_t val);
 
 // Core functions

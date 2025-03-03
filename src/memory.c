@@ -141,6 +141,10 @@ uint8_t mem_read(uint32_t addr) {
   return memory[addr];
 }
 
+uint16_t mem_read16(uint32_t addr) {
+  return (memory[addr + 1] << 8) | memory[addr];
+}
+
 void mem_write(uint32_t addr, uint8_t value) {
   if (addr >= MEM_SIZE) return;
   memory[addr] = value;
