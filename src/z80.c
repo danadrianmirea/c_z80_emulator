@@ -478,7 +478,651 @@ int decode_cb(Z80_State* state) {
     UPDATE_SZP(state, state->a);
     break;
 
-    
+  case 0x20: // SLA B
+    temp = (state->b >> 7) & 1;
+    state->b = state->b << 1;
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= temp ? FLAG_C : 0;
+    UPDATE_SZP(state, state->b);
+    break;
+
+  case 0x21: // SLA C
+    temp = (state->c >> 7) & 1;
+    state->c = state->c << 1;
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= temp ? FLAG_C : 0;
+    UPDATE_SZP(state, state->c);
+    break;
+
+  case 0x22: // SLA D
+    temp = (state->d >> 7) & 1;
+    state->d = state->d << 1;
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= temp ? FLAG_C : 0;
+    UPDATE_SZP(state, state->d);
+    break;
+
+  case 0x23: // SLA E
+    temp = (state->e >> 7) & 1;
+    state->e = state->e << 1;
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= temp ? FLAG_C : 0;
+    UPDATE_SZP(state, state->e);
+    break;
+
+  case 0x24: // SLA H
+    temp = (state->h >> 7) & 1;
+    state->h = state->h << 1;
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= temp ? FLAG_C : 0;
+    UPDATE_SZP(state, state->h);
+    break;
+
+  case 0x25: // SLA L
+    temp = (state->l >> 7) & 1;
+    state->l = state->l << 1;
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= temp ? FLAG_C : 0;
+    UPDATE_SZP(state, state->l);
+    break;
+
+  case 0x26: // SLA (HL)
+    temp = (mem_read(state->hl) >> 7) & 1;
+    mem_write(state->hl, mem_read(state->hl) << 1);
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= temp ? FLAG_C : 0;
+    UPDATE_SZP(state, mem_read(state->hl));
+    break;
+
+  case 0x27: // SLA A
+    temp = (state->a >> 7) & 1;
+    state->a = state->a << 1;
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= temp ? FLAG_C : 0;
+    UPDATE_SZP(state, state->a);
+
+  case 0x28: // SRA B
+    temp = state->b & 1;
+    state->b = (state->b >> 1) | (state->b & 0x80);
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= temp ? FLAG_C : 0;
+    UPDATE_SZP(state, state->b);
+    break;
+
+  case 0x29: // SRA C
+    temp = state->c & 1;
+    state->c = (state->c >> 1) | (state->c & 0x80);
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= temp ? FLAG_C : 0;
+    UPDATE_SZP(state, state->c);
+    break;
+
+  case 0x2A: // SRA D
+    temp = state->d & 1;
+    state->d = (state->d >> 1) | (state->d & 0x80);
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= temp ? FLAG_C : 0;
+    UPDATE_SZP(state, state->d);
+    break;
+
+  case 0x2B: // SRA E
+    temp = state->e & 1;
+    state->e = (state->e >> 1) | (state->e & 0x80);
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= temp ? FLAG_C : 0;
+    UPDATE_SZP(state, state->e);
+    break;
+
+  case 0x2C: // SRA H
+    temp = state->h & 1;
+    state->h = (state->h >> 1) | (state->h & 0x80);
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= temp ? FLAG_C : 0;
+    UPDATE_SZP(state, state->h);
+    break;
+
+  case 0x2D: // SRA L
+    temp = state->l & 1;
+    state->l = (state->l >> 1) | (state->l & 0x80);
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= temp ? FLAG_C : 0;
+    UPDATE_SZP(state, state->l);
+    break;
+
+  case 0x2E: // SRA (HL)
+    temp = mem_read(state->hl) & 1;
+    uint8_t val = mem_read(state->hl);
+    mem_write(state->hl, (val >> 1) | (val & 0x80));
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= temp ? FLAG_C : 0;
+    UPDATE_SZP(state, mem_read(state->hl));
+    break;
+
+  case 0x2F: // SRA A
+    temp = state->a & 1;
+    state->a = (state->a >> 1) | (state->a & 0x80);
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= temp ? FLAG_C : 0;
+    UPDATE_SZP(state, state->a);
+    break;
+
+  case 0x30: // SLL B
+    temp = state->b >> 7;
+    state->b = (state->b << 1) & 0xFF;
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= temp ? FLAG_C : 0;
+    UPDATE_SZP(state, state->b);
+    break;
+
+  case 0x31: // SLL C
+    temp = state->c >> 7;
+    state->c = (state->c << 1) & 0xFF;
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= temp ? FLAG_C : 0;
+    UPDATE_SZP(state, state->c);
+    break;
+
+  case 0x32: // SLL D
+    temp = state->d >> 7;
+    state->d = (state->d << 1) & 0xFF;
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= temp ? FLAG_C : 0;
+    UPDATE_SZP(state, state->d);
+    break;
+
+  case 0x33: // SLL E
+    temp = state->e >> 7;
+    state->e = (state->e << 1) & 0xFF;
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= temp ? FLAG_C : 0;
+    UPDATE_SZP(state, state->e);
+    break;
+
+  case 0x34: // SLL H
+    temp = state->h >> 7;
+    state->h = (state->h << 1) & 0xFF;
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= temp ? FLAG_C : 0;
+    UPDATE_SZP(state, state->h);
+    break;
+
+  case 0x35: // SLL L
+    temp = state->l >> 7;
+    state->l = (state->l << 1) & 0xFF;
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= temp ? FLAG_C : 0;
+    UPDATE_SZP(state, state->l);
+    break;
+
+  case 0x36: // SLL (HL)
+    temp = mem_read(state->hl) >> 7;
+    val = mem_read(state->hl);
+    mem_write(state->hl, (val << 1) & 0xFF);
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= temp ? FLAG_C : 0;
+    UPDATE_SZP(state, mem_read(state->hl));
+    break;
+
+  case 0x37: // SLL A
+    temp = state->a >> 7;
+    state->a = (state->a << 1) & 0xFF;
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= temp ? FLAG_C : 0;
+    UPDATE_SZP(state, state->a);
+    break;
+
+  case 0x38: // SRL B
+    temp = state->b & 1;
+    state->b >>= 1;
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= temp ? FLAG_C : 0;
+    UPDATE_SZP(state, state->b);
+    break;
+
+  case 0x39: // SRL C
+    temp = state->c & 1;
+    state->c >>= 1;
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= temp ? FLAG_C : 0;
+    UPDATE_SZP(state, state->c);
+    break;
+
+  case 0x3A: // SRL D
+    temp = state->d & 1;
+    state->d >>= 1;
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= temp ? FLAG_C : 0;
+    UPDATE_SZP(state, state->d);
+    break;
+
+  case 0x3B: // SRL E
+    temp = state->e & 1;
+    state->e >>= 1;
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= temp ? FLAG_C : 0;
+    UPDATE_SZP(state, state->e);
+    break;
+
+  case 0x3C: // SRL H
+    temp = state->h & 1;
+    state->h >>= 1;
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= temp ? FLAG_C : 0;
+    UPDATE_SZP(state, state->h);
+    break;
+
+  case 0x3D: // SRL L
+    temp = state->l & 1;
+    state->l >>= 1;
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= temp ? FLAG_C : 0;
+    UPDATE_SZP(state, state->l);
+    break;
+
+  case 0x3E: // SRL (HL)
+    temp = mem_read(state->hl) & 1;
+    val = mem_read(state->hl) >> 1;
+    mem_write(state->hl, val);
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= temp ? FLAG_C : 0;
+    UPDATE_SZP(state, val);
+    break;
+
+  case 0x3F: // SRL A
+    temp = state->a & 1;
+    state->a >>= 1;
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= temp ? FLAG_C : 0;
+    UPDATE_SZP(state, state->a);
+    break;
+
+  case 0x40: // BIT 0, B
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->b & 0x01) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x41: // BIT 0, C
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->c & 0x01) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x42: // BIT 0, D
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->d & 0x01) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x43: // BIT 0, E
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->e & 0x01) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x44: // BIT 0, H
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->h & 0x01) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x45: // BIT 0, L
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->l & 0x01) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x46: // BIT 0, (HL)
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (mem_read(state->hl) & 0x01) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x47: // BIT 0, A
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->a & 0x01) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x48: // BIT 1, B
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->b & 0x02) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x49: // BIT 1, C
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->c & 0x02) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x4A: // BIT 1, D
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->d & 0x02) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x4B: // BIT 1, E
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->e & 0x02) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x4C: // BIT 1, H
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->h & 0x02) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x4D: // BIT 1, L
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->l & 0x02) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x4E: // BIT 1, (HL)
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (mem_read(state->hl) & 0x02) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x4F: // BIT 1, A
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->a & 0x02) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x50: // BIT 2, B
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->b & 0x04) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x51: // BIT 2, C
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->c & 0x04) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x52: // BIT 2, D
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->d & 0x04) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x53: // BIT 2, E
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->e & 0x04) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x54: // BIT 2, H
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->h & 0x04) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x55: // BIT 2, L
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->l & 0x04) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x56: // BIT 2, (HL)
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (mem_read(state->hl) & 0x04) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x57: // BIT 2, A
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->a & 0x04) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x58: // BIT 3, B
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->b & 0x08) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x59: // BIT 3, C
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->c & 0x08) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x5A: // BIT 3, D
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->d & 0x08) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x5B: // BIT 3, E
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->e & 0x08) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x5C: // BIT 3, H
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->h & 0x08) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x5D: // BIT 3, L
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->l & 0x08) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x5E: // BIT 3, (HL)
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (mem_read(state->hl) & 0x08) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x5F: // BIT 3, A
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->a & 0x08) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x60: // BIT 4, B
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->b & 0x10) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x61: // BIT 4, C
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->c & 0x10) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x62: // BIT 4, D
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->d & 0x10) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x63: // BIT 4, E
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->e & 0x10) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x64: // BIT 4, H
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->h & 0x10) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x65: // BIT 4, L
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->l & 0x10) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x66: // BIT 4, (HL)
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (mem_read(state->hl) & 0x10) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x67: // BIT 4, A
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->a & 0x10) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x68: // BIT 5, B
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->b & 0x20) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x69: // BIT 5, C
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->c & 0x20) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x6a: // BIT 5, D
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->d & 0x20) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x6b: // BIT 5, E
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->e & 0x20) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x6c: // BIT 5, H
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->h & 0x20) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x6d: // BIT 5, L
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->l & 0x20) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x6e: // BIT 5, (HL)
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (mem_read(state->hl) & 0x20) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x6f: // BIT 5, A
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->a & 0x20) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x70: // BIT 6, B
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->b & 0x40) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x71: // BIT 6, C
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->c & 0x40) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x72: // BIT 6, D
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->d & 0x40) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x73: // BIT 6, E
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->e & 0x40) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x74: // BIT 6, H
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->h & 0x40) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x75: // BIT 6, L
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->l & 0x40) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x76: // BIT 6, (HL)
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (mem_read(state->hl) & 0x40) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x77: // BIT 6, A
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->a & 0x40) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x78: // BIT 7, B
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->b & 0x80) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x79: // BIT 7, C
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->c & 0x80) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x7a: // BIT 7, D
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->d & 0x80) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x7b: // BIT 7, E
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->e & 0x80) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x7c: // BIT 7, H
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->h & 0x80) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x7d: // BIT 7, L
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->l & 0x80) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x7e: // BIT 7, (HL)
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (mem_read(state->hl) & 0x80) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  case 0x7f: // BIT 7, A
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= (state->a & 0x80) ? 0 : FLAG_Z;
+    state->f |= FLAG_H;
+    break;
+
+  
+
+
   default:
     printf("Unknown CB opcode: %02X\n", opcode);
     return 0;
