@@ -273,7 +273,6 @@ void print_usage(const char *program_name) {
   printf("Example: %s 48.rom game.z80\n", program_name);
 }
 
-// Add this to your main.c
 #ifdef _WIN32
 #undef main
 #endif
