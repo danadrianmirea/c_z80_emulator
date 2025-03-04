@@ -15,16 +15,14 @@ add_executable(zx_emulator ${SOURCES} ${HEADERS})
 # Include directories
 target_include_directories(zx_emulator PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
-# Set compile options based on build type
-target_compile_options(zx_emulator PRIVATE
-    $<$<CONFIG:Release>:${CMAKE_CXX_FLAGS_RELEASE}>
-    $<$<CONFIG:Debug>:${CMAKE_CXX_FLAGS_DEBUG}>
-)
-
-# Set flags for GCC or G++
-if (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -Wextra")
-    set(CMAKE_CXX_FLAGS_DEBUG "-Og -Wall -Wextra")
+# Set compiler flags for Release mode
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
+    # Check if the compiler is GCC or Clang
+    if (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        # Add -s flag to strip debug symbols in Release mode
+        set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
+        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
+    endif()
 endif()
 
 # Find and link SDL2 components
