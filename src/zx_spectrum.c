@@ -1750,29 +1750,37 @@ int z80_step(Z80_State* state) {
   uint8_t carry;
   uint8_t res;
   uint8_t port;
+  uint8_t tempA;
+  uint8_t tempF;
 
   switch (opcode) {
 
   case 0x00: // NOP
     break;
+
   case 0x01: // LD BC,nn
     state->bc = (mem_read(state->pc++) << 8) | mem_read(state->pc++);
     break;
+
   case 0x02: // LD (BC),A
     mem_write(state->bc, state->a);
     break;
+
   case 0x03: // INC BC
     state->bc++;
     break;
+
   case 0x04: // INC B
     state->b++;
     UPDATE_SZ(state, state->b);
     break;
+
   case 0x05: // DEC B
     state->b--;
     UPDATE_SZ(state, state->b);
     SET_FLAG(state, FLAG_N);
     break;
+
   case 0x06: // LD B,n
     state->b = mem_read(state->pc++);
     break;
@@ -1781,8 +1789,8 @@ int z80_step(Z80_State* state) {
     UPDATE_SZ(state, state->a);
     break;
   case 0x08: // EX AF, AF'
-    uint8_t tempA = state->a;
-    uint8_t tempF = state->f;
+    tempA = state->a;
+    tempF = state->f;
     state->a = state->a_;
     state->f = state->f_;
     state->a_ = tempA;
