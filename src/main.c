@@ -5,7 +5,11 @@
 #include <stdio.h>
 #include <time.h>
 
+//#define DEBUG
+#define LOGGING_INTERVAL_FAST  100
+#define LOGGING_INTERVAL_MID   500
 #define LOGGING_INTERVAL_SLOW 1000
+
 
 extern uint8_t memory[MEM_SIZE];
 
@@ -251,6 +255,18 @@ void perform_sleep() {
   SDL_Delay(2); // TODO: rework this to a more accurate sleep
 }
 
+void debug_log(Z80_State* state)
+{
+#ifdef DEBUG
+  static uint32_t last_log_time = 0;
+  uint32_t current_time = SDL_GetTicks();
+  if (current_time - last_log_time > LOGGING_INTERVAL_MID) {
+    last_log_time = current_time;
+    printf("PC: 0x%04x\n", state->pc);
+  }
+#endif
+}
+
 void print_usage(const char* program_name) {
   printf("ZX Spectrum Emulator\n");
   printf("Usage: %s <rom_file> <z80_snapshot>\n\n", program_name);
@@ -288,6 +304,7 @@ int main(int argc, char* argv[]) {
     display_update(memory);
     z80_step(&z80_state);
     perform_sleep();
+    debug_log(&z80_state);
   }
 
   display_cleanup();
