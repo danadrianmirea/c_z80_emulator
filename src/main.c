@@ -292,7 +292,7 @@ int main(int argc, char* argv[]) {
     input_handle(&z80_state);
     display_update(memory);
     z80_step(&z80_state);
-    perform_sleep();
+    //perform_sleep();
   }
 
   display_cleanup();
