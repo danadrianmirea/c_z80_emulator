@@ -3,6 +3,7 @@
 #define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
 #include <stdio.h>
+#include <time.h>
 
 #define LOGGING_INTERVAL_SLOW 1000
 
@@ -247,23 +248,7 @@ void display_cleanup() {
 }
 
 void perform_sleep() {
-  static uint64_t last_time = 0;
-  uint64_t current_time = SDL_GetTicks64();
-  uint64_t delta_time = current_time - last_time;
-  last_time = current_time;
-  uint64_t instructions_per_ms = (uint64_t)(3500000.0 / 1000.0);
-  uint64_t target_time =
-    (uint64_t)((1000000000.0 / 3500000.0) / instructions_per_ms);
-  uint64_t delay = (delta_time < target_time) ? target_time - delta_time : 0;
-  if (delay > 0)
-
-    SDL_Delay(delay);
-
-  static uint64_t last_logged_time = 0;
-  if ((current_time - last_logged_time) >= LOGGING_INTERVAL_SLOW) {
-    printf("delta_time: %u, delay: %u\n", delta_time, delay);
-    last_logged_time = current_time;
-  }
+  SDL_Delay(2); // TODO: rework this to a more accurate sleep
 }
 
 void print_usage(const char* program_name) {
