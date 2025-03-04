@@ -256,33 +256,6 @@ void perform_sleep() {
   SDL_Delay(2); // TODO: rework this to a more accurate sleep
 }
 
-void debug_log(Z80_State* state)
-{
-  static uint32_t last_log_time = 0;
-#ifdef DEBUG
-  uint32_t current_time = SDL_GetTicks();
-  if (current_time - last_log_time > LOGGING_INTERVAL_MID) {
-    last_log_time = current_time;
-
-    printf("PC: 0x%04x\n", state->pc);
-  }
-#endif
-
-
-#ifdef DEBUG_TICK_SPEED  
-  uint32_t current_time = SDL_GetTicks();
-  if (current_time - last_log_time > LOGGING_INTERVAL_MID) {
-    last_log_time = current_time;
-    static uint64_t last_perf_count = 0;
-    uint64_t perf_count = SDL_GetPerformanceCounter();
-    uint64_t delta = perf_count - last_perf_count;
-    last_perf_count = perf_count;
-    double elapsed = (delta * 1000000.0) / SDL_GetPerformanceFrequency();
-    printf("tick took: %f us\n", elapsed);
-  }
-#endif  
-}
-
 void print_usage(const char* program_name) {
   printf("ZX Spectrum Emulator\n");
   printf("Usage: %s <rom_file> <z80_snapshot>\n\n", program_name);
@@ -320,7 +293,6 @@ int main(int argc, char* argv[]) {
     display_update(memory);
     z80_step(&z80_state);
     perform_sleep();
-    debug_log(&z80_state);
   }
 
   display_cleanup();
