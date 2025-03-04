@@ -1,6 +1,3 @@
-# src/CMakeLists.txt
-set(CMAKE_BUILD_TYPE Release)
-
 # List source files
 set(SOURCES
     zx_spectrum.c

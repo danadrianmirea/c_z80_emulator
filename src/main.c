@@ -6,6 +6,7 @@
 #include <time.h>
 
 //#define DEBUG
+#define DEBUG_TICK_SPEED
 #define LOGGING_INTERVAL_FAST  100
 #define LOGGING_INTERVAL_MID   500
 #define LOGGING_INTERVAL_SLOW 1000
@@ -257,14 +258,29 @@ void perform_sleep() {
 
 void debug_log(Z80_State* state)
 {
-#ifdef DEBUG
   static uint32_t last_log_time = 0;
+#ifdef DEBUG
   uint32_t current_time = SDL_GetTicks();
   if (current_time - last_log_time > LOGGING_INTERVAL_MID) {
     last_log_time = current_time;
+
     printf("PC: 0x%04x\n", state->pc);
   }
 #endif
+
+
+#ifdef DEBUG_TICK_SPEED  
+  uint32_t current_time = SDL_GetTicks();
+  if (current_time - last_log_time > LOGGING_INTERVAL_MID) {
+    last_log_time = current_time;
+    static uint64_t last_perf_count = 0;
+    uint64_t perf_count = SDL_GetPerformanceCounter();
+    uint64_t delta = perf_count - last_perf_count;
+    last_perf_count = perf_count;
+    double elapsed = (delta * 1000000.0) / SDL_GetPerformanceFrequency();
+    printf("tick took: %f us\n", elapsed);
+  }
+#endif  
 }
 
 void print_usage(const char* program_name) {
