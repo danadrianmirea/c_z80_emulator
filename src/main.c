@@ -80,8 +80,7 @@ void display_update(uint8_t* memory) {
       }
 
       // Set pixel color
-      pixels[y * SCREEN_WIDTH + x] =
-        palette[(pixel ? ink : paper) + (bright ? 8 : 0)];
+      pixels[y * SCREEN_WIDTH + x] = palette[(pixel ? ink : paper) + (bright ? 8 : 0)];
     }
   }
 
