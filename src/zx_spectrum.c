@@ -1648,28 +1648,393 @@ int decode_dd(Z80_State* state) {
   uint8_t port;
 
   switch (opcode) {
-  case 0x09: // ADD IX, BC
-    temp16 = state->ix + state->bc;
-    SET_FLAG(state, FLAG_N);
-    CLR_FLAG(state, FLAG_C | FLAG_H);
-    if (temp16 & 0x10000) SET_FLAG(state, FLAG_C);
-    if (((state->ix & 0x0FFF) + (state->bc & 0x0FFF)) & 0x1000)
-      SET_FLAG(state, FLAG_H);
-    state->ix = temp16;
+
+  case 0x09: // ADD IX,BC
+    state->ix += state->bc;
     break;
 
-  case 0x19: // ADD IX, DE
-    temp16 = state->ix + state->de;
-    SET_FLAG(state, FLAG_N);
-    CLR_FLAG(state, FLAG_C | FLAG_H);
-    if (temp16 & 0x10000) SET_FLAG(state, FLAG_C);
-    if (((state->ix & 0x0FFF) + (state->de & 0x0FFF)) & 0x1000)
-      SET_FLAG(state, FLAG_H);
-    state->ix = temp16;
+  case 0x19: // ADD IX,DE
+    state->ix += state->de;
+    break;
+
+  case 0x21: // LD IX,nnnn
+    state->ix = (mem_read(state->pc++) | (mem_read(state->pc++) << 8));
+    break;
+
+  case 0x22: // LD (nnnn),IX
+    temp16 = (mem_read(state->pc++) | (mem_read(state->pc++) << 8));
+    mem_write16(temp16, state->ix);
+    break;
+
+  case 0x23: // INC IX
+    state->ix++;
+    break;
+
+  case 0x24: // INC IXH
+    state->ix = (state->ix & 0x00FF) | ((state->ix + 0x0100) & 0xFF00);
+    break;
+
+  case 0x25: // DEC IXH
+    state->ix = (state->ix & 0x00FF) | ((state->ix - 0x0100) & 0xFF00);
+    break;
+
+  case 0x26: // LD IXH,nn
+    state->ix = (state->ix & 0x00FF) | (mem_read(state->pc++) << 8);
+    break;
+
+  case 0x29: // ADD IX,IX
+    state->ix += state->ix;
+    break;
+
+  case 0x2A: // LD IX,(nnnn)
+    temp16 = (mem_read(state->pc++) | (mem_read(state->pc++) << 8));
+    state->ix = mem_read16(temp16);
+    break;
+
+  case 0x2B: // DEC IX
+    state->ix--;
+    break;
+
+  case 0x2C: // INC IXL
+    state->ix = (state->ix & 0xFF00) | ((state->ix + 0x0001) & 0x00FF);
+    break;
+
+  case 0x2D: // DEC IXL
+    state->ix = (state->ix & 0xFF00) | ((state->ix - 0x0001) & 0x00FF);
+    break;
+
+  case 0x2E: // LD IXL,nn
+    state->ix = (state->ix & 0xFF00) | mem_read(state->pc++);
+    break;
+
+  case 0x34: // INC (IX+dd)
+    temp16 = state->ix + (int8_t)mem_read(state->pc++);
+    mem_write(temp16, mem_read(temp16) + 1);
+    break;
+
+  case 0x35: // DEC (IX+dd)
+    temp16 = state->ix + (int8_t)mem_read(state->pc++);
+    mem_write(temp16, mem_read(temp16) - 1);
+    break;
+
+  case 0x36: // LD (IX+dd),nn
+    temp16 = state->ix + (int8_t)mem_read(state->pc++);
+    mem_write(temp16, mem_read(state->pc++));
+    break;
+
+  case 0x39: // ADD IX,SP
+    state->ix += state->sp;
+    break;
+
+  case 0x44: // LD B,IXH
+    state->b = (state->ix >> 8) & 0xFF;
+    break;
+
+  case 0x45: // LD B,IXL
+    state->b = state->ix & 0xFF;
+    break;
+
+  case 0x46: // LD B,(IX+dd)
+    temp16 = state->ix + (int8_t)mem_read(state->pc++);
+    state->b = mem_read(temp16);
+    break;
+
+  case 0x4C: // LD C,IXH
+    state->c = (state->ix >> 8) & 0xFF;
+    break;
+
+  case 0x4D: // LD C,IXL
+    state->c = state->ix & 0xFF;
+    break;
+
+  case 0x4E: // LD C,(IX+dd)
+    temp16 = state->ix + (int8_t)mem_read(state->pc++);
+    state->c = mem_read(temp16);
+    break;
+
+  case 0x54: // LD D,IXH
+    state->d = (state->ix >> 8) & 0xFF;
+    break;
+
+  case 0x55: // LD D,IXL
+    state->d = state->ix & 0xFF;
+    break;
+
+  case 0x56: // LD D,(IX+dd)
+    temp16 = state->ix + (int8_t)mem_read(state->pc++);
+    state->d = mem_read(temp16);
+    break;
+
+  case 0x5C: // LD E,IXH
+    state->e = (state->ix >> 8) & 0xFF;
+    break;
+
+  case 0x5D: // LD E,IXL
+    state->e = state->ix & 0xFF;
+    break;
+
+  case 0x5E: // LD E,(IX+dd)
+    temp16 = state->ix + (int8_t)mem_read(state->pc++);
+    state->e = mem_read(temp16);
+    break;
+
+  case 0x60: // LD IXH,B
+    state->ix = (state->ix & 0x00FF) | (state->b << 8);
+    break;
+
+  case 0x61: // LD IXH,C
+    state->ix = (state->ix & 0x00FF) | (state->c << 8);
+    break;
+
+  case 0x62: // LD IXH,D
+    state->ix = (state->ix & 0x00FF) | (state->d << 8);
+    break;
+
+  case 0x63: // LD IXH,E
+    state->ix = (state->ix & 0x00FF) | (state->e << 8);
+    break;
+
+  case 0x64: // LD IXH,IXH
+    // No operation needed, IXH already holds its value
+    break;
+
+  case 0x65: // LD IXH,IXL
+    state->ix = (state->ix & 0x00FF) | ((state->ix & 0xFF) << 8);
+    break;
+
+  case 0x66: // LD H,(IX+dd)
+    temp16 = state->ix + (int8_t)mem_read(state->pc++);
+    state->h = mem_read(temp16);
+    break;
+
+  case 0x67: // LD IXH,A
+    state->ix = (state->ix & 0x00FF) | (state->a << 8);
+    break;
+
+  case 0x68: // LD IXL,B
+    state->ix = (state->ix & 0xFF00) | state->b;
+    break;
+
+  case 0x69: // LD IXL,C
+    state->ix = (state->ix & 0xFF00) | state->c;
+    break;
+
+  case 0x6A: // LD IXL,D
+    state->ix = (state->ix & 0xFF00) | state->d;
+    break;
+
+  case 0x6B: // LD IXL,E
+    state->ix = (state->ix & 0xFF00) | state->e;
+    break;
+
+  case 0x6C: // LD IXL,IXH
+    state->ix = (state->ix & 0xFF00) | ((state->ix >> 8) & 0xFF);
+    break;
+
+  case 0x6D: // LD IXL,IXL
+    // No operation needed, IXL already holds its value
+    break;
+
+  case 0x6E: // LD L,(IX+dd)
+    temp16 = state->ix + (int8_t)mem_read(state->pc++);
+    state->l = mem_read(temp16);
+    break;
+
+  case 0x6F: // LD IXL,A
+    state->ix = (state->ix & 0xFF00) | state->a;
+    break;
+
+  case 0x70: // LD (IX+dd),B
+    temp16 = state->ix + (int8_t)mem_read(state->pc++);
+    mem_write(temp16, state->b);
+    break;
+
+  case 0x71: // LD (IX+dd),C
+    temp16 = state->ix + (int8_t)mem_read(state->pc++);
+    mem_write(temp16, state->c);
+    break;
+
+  case 0x72: // LD (IX+dd),D
+    temp16 = state->ix + (int8_t)mem_read(state->pc++);
+    mem_write(temp16, state->d);
+    break;
+
+  case 0x73: // LD (IX+dd),E
+    temp16 = state->ix + (int8_t)mem_read(state->pc++);
+    mem_write(temp16, state->e);
+    break;
+
+  case 0x74: // LD (IX+dd),H
+    temp16 = state->ix + (int8_t)mem_read(state->pc++);
+    mem_write(temp16, state->h);
+    break;
+
+  case 0x75: // LD (IX+dd),L
+    temp16 = state->ix + (int8_t)mem_read(state->pc++);
+    mem_write(temp16, state->l);
+    break;
+
+  case 0x77: // LD (IX+dd),A
+    temp16 = state->ix + (int8_t)mem_read(state->pc++);
+    mem_write(temp16, state->a);
+    break;
+
+  case 0x7C: // LD A,IXH
+    state->a = (state->ix >> 8) & 0xFF;
+    break;
+
+  case 0x7D: // LD A,IXL
+    state->a = state->ix & 0xFF;
+    break;
+
+  case 0x7E: // LD A,(IX+dd)
+    temp16 = state->ix + (int8_t)mem_read(state->pc++);
+    state->a = mem_read(temp16);
+    break;
+
+  case 0x84: // ADD A,IXH
+    state->a += (state->ix >> 8) & 0xFF;
+    break;
+
+  case 0x85: // ADD A,IXL
+    state->a += state->ix & 0xFF;
+    break;
+
+  case 0x86: // ADD A,(IX+dd)
+    temp16 = state->ix + (int8_t)mem_read(state->pc++);
+    state->a += mem_read(temp16);
+    break;
+
+  case 0x8C: // ADC A,IXH
+    state->a += (state->ix >> 8) & 0xFF + TST_FLAG(state, FLAG_C);
+    break;
+
+  case 0x8D: // ADC A,IXL
+    state->a += state->ix & 0xFF + TST_FLAG(state, FLAG_C);
+    break;
+
+  case 0x8E: // ADC A,(IX+dd)
+    temp16 = state->ix + (int8_t)mem_read(state->pc++);
+    state->a += mem_read(temp16) + TST_FLAG(state, FLAG_C);
+    break;
+
+  case 0x94: // SUB A,IXH
+    state->a -= (state->ix >> 8) & 0xFF;
+    break;
+
+  case 0x95: // SUB A,IXL
+    state->a -= state->ix & 0xFF;
+    break;
+
+  case 0x96: // SUB A,(IX+dd)
+    temp16 = state->ix + (int8_t)mem_read(state->pc++);
+    state->a -= mem_read(temp16);
+    break;
+
+  case 0x9C: // SBC A,IXH
+    state->a -= (state->ix >> 8) & 0xFF + TST_FLAG(state, FLAG_C);
+    break;
+
+  case 0x9D: // SBC A,IXL
+    state->a -= state->ix & 0xFF + TST_FLAG(state, FLAG_C);
+    break;
+
+  case 0x9E: // SBC A,(IX+dd)
+    temp16 = state->ix + (int8_t)mem_read(state->pc++);
+    state->a -= mem_read(temp16) + TST_FLAG(state, FLAG_C);
+    break;
+
+  case 0xA4: // AND A,IXH
+    state->a &= (state->ix >> 8) & 0xFF;
+    UPDATE_SZ(state, state->a);
+    break;
+
+  case 0xA5: // AND A,IXL
+    state->a &= state->ix & 0xFF;
+    UPDATE_SZ(state, state->a);
+    break;
+
+  case 0xA6: // AND A,(IX+dd)
+    temp16 = state->ix + (int8_t)mem_read(state->pc++);
+    state->a &= mem_read(temp16);
+    UPDATE_SZ(state, state->a);
+    break;
+
+  case 0xAC: // XOR A,IXH
+    state->a ^= (state->ix >> 8) & 0xFF;
+    UPDATE_SZ(state, state->a);
+    break;
+
+  case 0xAD: // XOR A,IXL
+    state->a ^= state->ix & 0xFF;
+    UPDATE_SZ(state, state->a);
+    break;
+
+  case 0xAE: // XOR A,(IX+dd)
+    temp16 = state->ix + (int8_t)mem_read(state->pc++);
+    state->a ^= mem_read(temp16);
+    UPDATE_SZ(state, state->a);
+    break;
+
+  case 0xB4: // OR A,IXH
+    state->a |= (state->ix >> 8) & 0xFF;
+    UPDATE_SZ(state, state->a);
+    break;
+
+  case 0xB5: // OR A,IXL
+    state->a |= state->ix & 0xFF;
+    UPDATE_SZ(state, state->a);
+    break;
+
+  case 0xB6: // OR A,(IX+dd)
+    temp16 = state->ix + (int8_t)mem_read(state->pc++);
+    state->a |= mem_read(temp16);
+    UPDATE_SZ(state, state->a);
+    break;
+
+  case 0xBC: // CP IXH
+    temp = (state->ix >> 8) & 0xFF;
+    res = state->a - temp;
+    UPDATE_FLAGS_SUB(state, res, temp);
+    break;
+
+  case 0xBD: // CP IXL
+    temp = state->ix & 0xFF;
+    res = state->a - temp;
+    UPDATE_FLAGS_SUB(state, res, temp);
+    break;
+
+  case 0xBE: // CP (IX+dd)
+    temp16 = state->ix + (int8_t)mem_read(state->pc++);
+    temp = mem_read(temp16);
+    res = state->a - temp;
+    UPDATE_FLAGS_SUB(state, res, temp);
     break;
 
   case 0xCB: // CB-prefixed opcodes
     return decode_ddcb(state);
+
+  case 0xE1: // POP IX
+    state->ix = pop16(state);
+    break;
+
+  case 0xE3: // EX (SP),IX
+    temp16 = pop16(state);
+    push16(state, state->ix);
+    state->ix = temp16;
+    break;
+
+  case 0xE5: // PUSH IX
+    push16(state, state->ix);
+    break;
+
+  case 0xE9: // JP IX
+    state->pc = state->ix;
+    break;
+
+  case 0xF9: // LD SP,IX
+    state->sp = state->ix;
+    break;
 
   default:
     printf("Unknown DD opcode: %02X\n", opcode);
