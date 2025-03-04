@@ -1,0 +1,19 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run",
+      "type": "shell",
+      "command": "${workspaceFolder}/bin/zx_emulator.exe",  // Adjust path
+      "args": ["48.rom", "deathchase.z80"],
+      "options": {
+        "cwd": "${workspaceFolder}/bin"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "problemMatcher": []
+    }
+  ]
+}
