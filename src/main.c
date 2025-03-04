@@ -4,38 +4,38 @@
 #include <SDL2/SDL.h>
 #include <stdio.h>
 
-#define LOGGING_INTERVAL_SLOW 100
+#define LOGGING_INTERVAL_SLOW 1000
 
 extern uint8_t memory[MEM_SIZE];
 
-SDL_Window *window = NULL;
-SDL_Renderer *renderer = NULL;
-SDL_Texture *texture = NULL;
+SDL_Window* window = NULL;
+SDL_Renderer* renderer = NULL;
+SDL_Texture* texture = NULL;
 uint32_t pixels[SCREEN_WIDTH * SCREEN_HEIGHT];
 
 // Spectrum color palette (RGB888)
-const uint32_t palette[16] = {0xFF000000, 0xFF0000D7, 0xFFD70000,
+const uint32_t palette[16] = { 0xFF000000, 0xFF0000D7, 0xFFD70000,
                               0xFFD700D7, // Black, Blue, Red, Magenta
                               0xFF00D700, 0xFF00D7D7, 0xFFD7D700,
                               0xFFD7D7D7, // Green, Cyan, Yellow, White
                               0xFF000000, 0xFF0000FF, 0xFFFF0000,
                               0xFFFF00FF, // Bright variants
-                              0xFF00FF00, 0xFF00FFFF, 0xFFFFFF00, 0xFFFFFFFF};
+                              0xFF00FF00, 0xFF00FFFF, 0xFFFFFF00, 0xFFFFFFFF };
 
 void display_init() {
   SDL_Init(SDL_INIT_VIDEO);
   window =
-      SDL_CreateWindow("ZX Spectrum Emulator", SDL_WINDOWPOS_UNDEFINED,
-                       SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH * SCALE_FACTOR,
-                       SCREEN_HEIGHT * SCALE_FACTOR, SDL_WINDOW_SHOWN);
+    SDL_CreateWindow("ZX Spectrum Emulator", SDL_WINDOWPOS_UNDEFINED,
+      SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH * SCALE_FACTOR,
+      SCREEN_HEIGHT * SCALE_FACTOR, SDL_WINDOW_SHOWN);
 
   renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
   texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888,
-                              SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH,
-                              SCREEN_HEIGHT);
+    SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH,
+    SCREEN_HEIGHT);
 }
 
-void display_update(uint8_t *memory) {
+void display_update(uint8_t* memory) {
   static uint32_t flash_counter = 0;
   flash_counter++;
 
@@ -44,8 +44,8 @@ void display_update(uint8_t *memory) {
     for (int x = 0; x < SCREEN_WIDTH; x++) {
       // Calculate screen memory address
       uint16_t addr = 0x4000 | ((y & 0b11000000) << 5) |
-                      ((y & 0b00111000) << 2) | ((y & 0b00000111) << 8) |
-                      (x >> 3);
+        ((y & 0b00111000) << 2) | ((y & 0b00000111) << 8) |
+        (x >> 3);
 
       // Get pixel value from bitmap
       uint8_t byte = memory[addr];
@@ -75,7 +75,7 @@ void display_update(uint8_t *memory) {
 
       // Set pixel color
       pixels[y * SCREEN_WIDTH + x] =
-          palette[(pixel ? ink : paper) + (bright ? 8 : 0)];
+        palette[(pixel ? ink : paper) + (bright ? 8 : 0)];
     }
   }
 
@@ -90,27 +90,27 @@ void display_update(uint8_t *memory) {
 uint8_t sdl_scancode_to_zx_key(uint8_t scancode) {
   // Implement the conversion logic here
   static const uint8_t keymap[] = {
-      [SDL_SCANCODE_A] = 0x01,        [SDL_SCANCODE_B] = 0x02,
-      [SDL_SCANCODE_C] = 0x03,        [SDL_SCANCODE_D] = 0x04,
-      [SDL_SCANCODE_E] = 0x05,        [SDL_SCANCODE_F] = 0x06,
-      [SDL_SCANCODE_G] = 0x07,        [SDL_SCANCODE_H] = 0x08,
-      [SDL_SCANCODE_I] = 0x09,        [SDL_SCANCODE_J] = 0x0A,
-      [SDL_SCANCODE_K] = 0x0B,        [SDL_SCANCODE_L] = 0x0C,
-      [SDL_SCANCODE_M] = 0x0D,        [SDL_SCANCODE_N] = 0x0E,
-      [SDL_SCANCODE_O] = 0x0F,        [SDL_SCANCODE_P] = 0x10,
-      [SDL_SCANCODE_Q] = 0x11,        [SDL_SCANCODE_R] = 0x12,
-      [SDL_SCANCODE_S] = 0x13,        [SDL_SCANCODE_T] = 0x14,
-      [SDL_SCANCODE_U] = 0x15,        [SDL_SCANCODE_V] = 0x16,
-      [SDL_SCANCODE_W] = 0x17,        [SDL_SCANCODE_X] = 0x18,
-      [SDL_SCANCODE_Y] = 0x19,        [SDL_SCANCODE_Z] = 0x1A,
-      [SDL_SCANCODE_1] = 0x1B,        [SDL_SCANCODE_2] = 0x1C,
-      [SDL_SCANCODE_3] = 0x1D,        [SDL_SCANCODE_4] = 0x1E,
-      [SDL_SCANCODE_5] = 0x1F,        [SDL_SCANCODE_6] = 0x20,
-      [SDL_SCANCODE_7] = 0x21,        [SDL_SCANCODE_8] = 0x22,
-      [SDL_SCANCODE_9] = 0x23,        [SDL_SCANCODE_0] = 0x24,
-      [SDL_SCANCODE_RETURN] = 0x25,   [SDL_SCANCODE_SPACE] = 0x26,
-      [SDL_SCANCODE_LSHIFT] = 0x27,   [SDL_SCANCODE_RSHIFT] = 0x28,
-      [SDL_SCANCODE_CAPSLOCK] = 0x29, [SDL_SCANCODE_TAB] = 0x2A};
+      [SDL_SCANCODE_A] = 0x01,[SDL_SCANCODE_B] = 0x02,
+      [SDL_SCANCODE_C] = 0x03,[SDL_SCANCODE_D] = 0x04,
+      [SDL_SCANCODE_E] = 0x05,[SDL_SCANCODE_F] = 0x06,
+      [SDL_SCANCODE_G] = 0x07,[SDL_SCANCODE_H] = 0x08,
+      [SDL_SCANCODE_I] = 0x09,[SDL_SCANCODE_J] = 0x0A,
+      [SDL_SCANCODE_K] = 0x0B,[SDL_SCANCODE_L] = 0x0C,
+      [SDL_SCANCODE_M] = 0x0D,[SDL_SCANCODE_N] = 0x0E,
+      [SDL_SCANCODE_O] = 0x0F,[SDL_SCANCODE_P] = 0x10,
+      [SDL_SCANCODE_Q] = 0x11,[SDL_SCANCODE_R] = 0x12,
+      [SDL_SCANCODE_S] = 0x13,[SDL_SCANCODE_T] = 0x14,
+      [SDL_SCANCODE_U] = 0x15,[SDL_SCANCODE_V] = 0x16,
+      [SDL_SCANCODE_W] = 0x17,[SDL_SCANCODE_X] = 0x18,
+      [SDL_SCANCODE_Y] = 0x19,[SDL_SCANCODE_Z] = 0x1A,
+      [SDL_SCANCODE_1] = 0x1B,[SDL_SCANCODE_2] = 0x1C,
+      [SDL_SCANCODE_3] = 0x1D,[SDL_SCANCODE_4] = 0x1E,
+      [SDL_SCANCODE_5] = 0x1F,[SDL_SCANCODE_6] = 0x20,
+      [SDL_SCANCODE_7] = 0x21,[SDL_SCANCODE_8] = 0x22,
+      [SDL_SCANCODE_9] = 0x23,[SDL_SCANCODE_0] = 0x24,
+      [SDL_SCANCODE_RETURN] = 0x25,[SDL_SCANCODE_SPACE] = 0x26,
+      [SDL_SCANCODE_LSHIFT] = 0x27,[SDL_SCANCODE_RSHIFT] = 0x28,
+      [SDL_SCANCODE_CAPSLOCK] = 0x29,[SDL_SCANCODE_TAB] = 0x2A };
 
   return keymap[scancode];
 }
@@ -118,15 +118,15 @@ uint8_t sdl_scancode_to_zx_key(uint8_t scancode) {
 // Helper function to convert ZX Spectrum key value to row and column
 uint8_t zx_key_to_row(uint8_t key_value) {
   static const uint8_t rowmap[] = {
-      [0x01] = 0x00, [0x02] = 0x01, [0x03] = 0x02, [0x04] = 0x03, [0x05] = 0x04,
-      [0x06] = 0x05, [0x07] = 0x06, [0x08] = 0x07, [0x09] = 0x08, [0x0A] = 0x09,
-      [0x0B] = 0x0A, [0x0C] = 0x0B, [0x0D] = 0x0C, [0x0E] = 0x0D, [0x0F] = 0x0E,
-      [0x10] = 0x0F, [0x11] = 0x10, [0x12] = 0x11, [0x13] = 0x12, [0x14] = 0x13,
-      [0x15] = 0x14, [0x16] = 0x15, [0x17] = 0x16, [0x18] = 0x17, [0x19] = 0x18,
-      [0x1A] = 0x19, [0x1B] = 0x1A, [0x1C] = 0x1B, [0x1D] = 0x1C, [0x1E] = 0x1D,
-      [0x1F] = 0x1E, [0x20] = 0x1F, [0x21] = 0x20, [0x22] = 0x21, [0x23] = 0x22,
-      [0x24] = 0x23, [0x25] = 0x24, [0x26] = 0x25, [0x27] = 0x26, [0x28] = 0x27,
-      [0x29] = 0x28, [0x2A] = 0x29};
+      [0x01] = 0x00,[0x02] = 0x01,[0x03] = 0x02,[0x04] = 0x03,[0x05] = 0x04,
+      [0x06] = 0x05,[0x07] = 0x06,[0x08] = 0x07,[0x09] = 0x08,[0x0A] = 0x09,
+      [0x0B] = 0x0A,[0x0C] = 0x0B,[0x0D] = 0x0C,[0x0E] = 0x0D,[0x0F] = 0x0E,
+      [0x10] = 0x0F,[0x11] = 0x10,[0x12] = 0x11,[0x13] = 0x12,[0x14] = 0x13,
+      [0x15] = 0x14,[0x16] = 0x15,[0x17] = 0x16,[0x18] = 0x17,[0x19] = 0x18,
+      [0x1A] = 0x19,[0x1B] = 0x1A,[0x1C] = 0x1B,[0x1D] = 0x1C,[0x1E] = 0x1D,
+      [0x1F] = 0x1E,[0x20] = 0x1F,[0x21] = 0x20,[0x22] = 0x21,[0x23] = 0x22,
+      [0x24] = 0x23,[0x25] = 0x24,[0x26] = 0x25,[0x27] = 0x26,[0x28] = 0x27,
+      [0x29] = 0x28,[0x2A] = 0x29 };
   return rowmap[key_value];
 }
 
@@ -221,7 +221,7 @@ uint8_t zx_key_to_col(uint8_t key_value) {
   }
 }
 
-void input_handle(Z80_State *state) {
+void input_handle(Z80_State* state) {
   SDL_Event e;
   while (SDL_PollEvent(&e)) {
     if (e.type == SDL_QUIT)
@@ -247,31 +247,32 @@ void display_cleanup() {
 }
 
 void perform_sleep() {
-  static uint32_t last_time = 0;
-  uint32_t current_time = SDL_GetTicks();
-  uint32_t delta_time = current_time - last_time;
+  static uint64_t last_time = 0;
+  uint64_t current_time = SDL_GetTicks64();
+  uint64_t delta_time = current_time - last_time;
   last_time = current_time;
-  uint32_t instructions_per_ms = (uint32_t)(3500000.0 / 1000.0);
-  uint32_t target_time =
-      (uint32_t)((1000000000.0 / 3500000.0) / instructions_per_ms);
-  uint32_t delay = (delta_time < target_time) ? target_time - delta_time : 0;
+  uint64_t instructions_per_ms = (uint64_t)(3500000.0 / 1000.0);
+  uint64_t target_time =
+    (uint64_t)((1000000000.0 / 3500000.0) / instructions_per_ms);
+  uint64_t delay = (delta_time < target_time) ? target_time - delta_time : 0;
   if (delay > 0)
 
-  SDL_Delay(delay);
-  /*
-  if ((current_time / LOGGING_INTERVAL_SLOW) % 2 == 0) {
+    SDL_Delay(delay);
+
+  static uint64_t last_logged_time = 0;
+  if ((current_time - last_logged_time) >= LOGGING_INTERVAL_SLOW) {
     printf("delta_time: %u, delay: %u\n", delta_time, delay);
+    last_logged_time = current_time;
   }
-  */
 }
 
-void print_usage(const char *program_name) {
+void print_usage(const char* program_name) {
   printf("ZX Spectrum Emulator\n");
   printf("Usage: %s <rom_file> <z80_snapshot>\n\n", program_name);
   printf("Example: %s 48.rom game.z80\n", program_name);
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   if (argc < 3) {
     print_usage(argv[0]);
     return RETCODE_INVALID_ARGUMENTS;
@@ -282,8 +283,8 @@ int main(int argc, char *argv[]) {
   Z80_State z80_state;
   z80_init(&z80_state);
 
-  const char *romName = argv[1];
-  const char *z80SnapshotName = argv[2];
+  const char* romName = argv[1];
+  const char* z80SnapshotName = argv[2];
 
   if (!load_rom(romName)) {
     display_cleanup();
