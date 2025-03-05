@@ -4992,7 +4992,142 @@ int decode_fdcb(Z80_State* state) {
     state->b = res;
     break;
 
+  case 0x31: // LD C,SLL (IY+dd)
+    temp16 = state->iy + (int8_t)mem_read(state->pc++);
+    temp = mem_read(temp16);
+    res = (temp << 1) & 0xFF;
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= (res & FLAG_C) | (res ? 0 : FLAG_Z);
+    state->c = res;
+    break;
 
+  case 0x32: // LD D,SLL (IY+dd)
+    temp16 = state->iy + (int8_t)mem_read(state->pc++);
+    temp = mem_read(temp16);
+    res = (temp << 1) & 0xFF;
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= (res & FLAG_C) | (res ? 0 : FLAG_Z);
+    state->d = res;
+    break;
+
+  case 0x33: // LD E,SLL (IY+dd)
+    temp16 = state->iy + (int8_t)mem_read(state->pc++);
+    temp = mem_read(temp16);
+    res = (temp << 1) & 0xFF;
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= (res & FLAG_C) | (res ? 0 : FLAG_Z);
+    state->e = res;
+    break;
+
+  case 0x34: // LD H,SLL (IY+dd)
+    temp16 = state->iy + (int8_t)mem_read(state->pc++);
+    temp = mem_read(temp16);
+    res = (temp << 1) & 0xFF;
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= (res & FLAG_C) | (res ? 0 : FLAG_Z);
+    state->h = res;
+    break;
+
+  case 0x35: // LD L,SLL (IY+dd)
+    temp16 = state->iy + (int8_t)mem_read(state->pc++);
+    temp = mem_read(temp16);
+    res = (temp << 1) & 0xFF;
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= (res & FLAG_C) | (res ? 0 : FLAG_Z);
+    state->l = res;
+    break;
+
+  case 0x36: // SLL (IY+dd)
+    temp16 = state->iy + (int8_t)mem_read(state->pc++);
+    temp = mem_read(temp16);
+    res = (temp << 1) & 0xFF;
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= (res & FLAG_C) | (res ? 0 : FLAG_Z);
+    mem_write(temp16, res);
+    break;
+
+  case 0x37: // LD A,SLL (IY+dd)
+    temp16 = state->iy + (int8_t)mem_read(state->pc++);
+    temp = mem_read(temp16);
+    res = (temp << 1) & 0xFF;
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= (res & FLAG_C) | (res ? 0 : FLAG_Z);
+    state->a = res;
+    break;
+
+  case 0x38: // LD B,SRL (IY+dd)
+    temp16 = state->iy + (int8_t)mem_read(state->pc++);
+    temp = mem_read(temp16);
+    res = (temp >> 1) | (temp & 0x80);
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= (res & FLAG_C) | (res ? 0 : FLAG_Z);
+    state->b = res;
+    break;
+
+  case 0x39: // LD C,SRL (IY+dd)
+    temp16 = state->iy + (int8_t)mem_read(state->pc++);
+    temp = mem_read(temp16);
+    res = (temp >> 1) | (temp & 0x80);
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= (res & FLAG_C) | (res ? 0 : FLAG_Z);
+    state->c = res;
+    break;
+
+  case 0x3a: // LD D,SRL (IY+dd)
+    temp16 = state->iy + (int8_t)mem_read(state->pc++);
+    temp = mem_read(temp16);
+    res = (temp >> 1) | (temp & 0x80);
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= (res & FLAG_C) | (res ? 0 : FLAG_Z);
+    state->d = res;
+    break;
+
+  case 0x3b: // LD E,SRL (IY+dd)
+    temp16 = state->iy + (int8_t)mem_read(state->pc++);
+    temp = mem_read(temp16);
+    res = (temp >> 1) | (temp & 0x80);
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= (res & FLAG_C) | (res ? 0 : FLAG_Z);
+    state->e = res;
+    break;
+
+  case 0x3c: // LD H,SRL (IY+dd)
+    temp16 = state->iy + (int8_t)mem_read(state->pc++);
+    temp = mem_read(temp16);
+    res = (temp >> 1) | (temp & 0x80);
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= (res & FLAG_C) | (res ? 0 : FLAG_Z);
+    state->h = res;
+    break;
+
+  case 0x3d: // LD L,SRL (IY+dd)
+    temp16 = state->iy + (int8_t)mem_read(state->pc++);
+    temp = mem_read(temp16);
+    res = (temp >> 1) | (temp & 0x80);
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= (res & FLAG_C) | (res ? 0 : FLAG_Z);
+    state->l = res;
+    break;
+
+  case 0x3e: // SRL (IY+dd)
+    temp16 = state->iy + (int8_t)mem_read(state->pc++);
+    temp = mem_read(temp16);
+    res = (temp >> 1) | (temp & 0x80);
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= (res & FLAG_C) | (res ? 0 : FLAG_Z);
+    mem_write(temp16, res);
+    break;
+
+  case 0x3f: // LD A,SRL (IY+dd)
+    temp16 = state->iy + (int8_t)mem_read(state->pc++);
+    temp = mem_read(temp16);
+    res = (temp >> 1) | (temp & 0x80);
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_N | FLAG_H | FLAG_PV);
+    state->f |= (res & FLAG_C) | (res ? 0 : FLAG_Z);
+    state->a = res;
+    break;
+
+  
 
   default:
     printf("Unknown FD CB opcode: %02X\n", opcode);
