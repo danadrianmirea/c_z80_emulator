@@ -35,12 +35,12 @@ enum Z80_VERSION
 };
 
 // Flag update macros
-#define UPDATE_FLAGS_ADD(result, operand) \
-    CLR_FLAG(FLAG_Z | FLAG_S | FLAG_H | FLAG_C); \
-    if((result) == 0) SET_FLAG(FLAG_Z); \
-    if((result) & 0x80) SET_FLAG(FLAG_S); \
-    if(((operand) & 0x0F) + ((a) & 0x0F) > 0x0F) SET_FLAG(FLAG_H); \
-    if((uint16_t)(operand) + (uint16_t)(a) > 0xFF) SET_FLAG(FLAG_C);
+#define UPDATE_FLAGS_ADD(state, result, operand) \
+    CLR_FLAG(state, FLAG_Z | FLAG_S | FLAG_H | FLAG_C); \
+    if((result) == 0) SET_FLAG(state, FLAG_Z); \
+    if((result) & 0x80) SET_FLAG(state, FLAG_S); \
+    if(((operand) & 0x0F) + ((result) & 0x0F) > 0x0F) SET_FLAG(state, FLAG_H); \
+    if((uint16_t)(operand) + (uint16_t)(result) > 0xFF) SET_FLAG(state, FLAG_C);
 
 #define UPDATE_FLAGS_SUB(state, result, operand) \
     CLR_FLAG(state, FLAG_Z | FLAG_S | FLAG_H | FLAG_C); \
@@ -48,6 +48,11 @@ enum Z80_VERSION
     if((result) & 0x80) SET_FLAG(state, FLAG_S); \
     if(((operand) & 0x0F) > (state->a & 0x0F)) SET_FLAG(state, FLAG_H); \
     if((operand) > state->a) SET_FLAG(state, FLAG_C);
+
+#define UPDATE_FLAGS_LOGIC(result) \
+    CLR_FLAG(state, FLAG_Z | FLAG_S | FLAG_H | FLAG_C); \
+    if((result) == 0) SET_FLAG(state, FLAG_Z); \
+    if((result) & 0x80) SET_FLAG(state, FLAG_S);
 
 // Register State
 typedef struct {
