@@ -179,14 +179,15 @@ bool load_sna(const char* filename, Z80_State* state) {
 
     fread(&state->pc, sizeof(uint16_t), 1, sna_file);
 
-    if (fread(&memory[0x4000], 1, RAM_SIZE, sna_file) != RAM_SIZE) {
-        fprintf(stderr, "Partial SNA read\n");
-        fclose(sna_file);
-        return false;
+    size_t bytes_read = fread(&memory[0x4000], 1, RAM_SIZE - 3, sna_file);
+    fprintf(stderr, "Read %zu bytes from SNA file\n", bytes_read);
+    if (bytes_read != RAM_SIZE - 3) {
+      fprintf(stderr, "Partial SNA read\n");
+      fclose(sna_file);
+      return false;
     }
 
     fclose(sna_file);
     printf("Loaded SNA snapshot successfully\n");
     return true;
 }
-
