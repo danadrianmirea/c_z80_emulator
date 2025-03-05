@@ -5127,7 +5127,123 @@ int decode_fdcb(Z80_State* state) {
     state->a = res;
     break;
 
-  
+  case 0x40: // BIT 0, (IY+d)
+  case 0x41: // BIT 0, (IY+d)
+  case 0x42: // BIT 0, (IY+d)
+  case 0x43: // BIT 0, (IY+d)
+  case 0x44: // BIT 0, (IY+d)
+  case 0x45: // BIT 0, (IY+d)
+  case 0x46: // BIT 0, (IY+d)
+  case 0x47: // BIT 0, (IY+d)
+    temp16 = state->iy + (int8_t)mem_read(state->pc++);
+    temp = mem_read(temp16);
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= FLAG_H;
+    if (!(temp & 0x01)) SET_FLAG(state, FLAG_Z);
+    break;
+
+  case 0x48: // BIT 1, (IY+d)
+  case 0x49: // BIT 1, (IY+d)
+  case 0x4A: // BIT 1, (IY+d)
+  case 0x4B: // BIT 1, (IY+d)
+  case 0x4C: // BIT 1, (IY+d)
+  case 0x4D: // BIT 1, (IY+d)
+  case 0x4E: // BIT 1, (IY+d)
+  case 0x4F: // BIT 1, (IY+d)
+    temp16 = state->iy + (int8_t)mem_read(state->pc++);
+    temp = mem_read(temp16);
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= FLAG_H;
+    if (!(temp & 0x02)) SET_FLAG(state, FLAG_Z);
+    break;
+
+  case 0x50: // BIT 2, (IY+d)
+  case 0x51: // BIT 2, (IY+d)
+  case 0x52: // BIT 2, (IY+d)
+  case 0x53: // BIT 2, (IY+d)
+  case 0x54: // BIT 2, (IY+d)
+  case 0x55: // BIT 2, (IY+d)
+  case 0x56: // BIT 2, (IY+d)
+  case 0x57: // BIT 2, (IY+d)
+    temp16 = state->iy + (int8_t)mem_read(state->pc++);
+    temp = mem_read(temp16);
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= FLAG_H;
+    if (!(temp & 0x04)) SET_FLAG(state, FLAG_Z);
+    break;
+
+  case 0x58: // BIT 3, (IY+d)
+  case 0x59: // BIT 3, (IY+d)
+  case 0x5A: // BIT 3, (IY+d)
+  case 0x5B: // BIT 3, (IY+d)
+  case 0x5C: // BIT 3, (IY+d)
+  case 0x5D: // BIT 3, (IY+d)
+  case 0x5E: // BIT 3, (IY+d)
+  case 0x5F: // BIT 3, (IY+d)
+    temp16 = state->iy + (int8_t)mem_read(state->pc++);
+    temp = mem_read(temp16);
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= FLAG_H;
+    if (!(temp & 0x08)) SET_FLAG(state, FLAG_Z);
+    break;
+
+  case 0x60: // BIT 4, (IY+d)
+  case 0x61: // BIT 4, (IY+d)
+  case 0x62: // BIT 4, (IY+d)
+  case 0x63: // BIT 4, (IY+d)
+  case 0x64: // BIT 4, (IY+d)
+  case 0x65: // BIT 4, (IY+d)
+  case 0x66: // BIT 4, (IY+d)
+  case 0x67: // BIT 4, (IY+d)
+    temp16 = state->iy + (int8_t)mem_read(state->pc++);
+    temp = mem_read(temp16);
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= FLAG_H;
+    if (!(temp & 0x10)) SET_FLAG(state, FLAG_Z);
+    break;
+
+  case 0x68: // BIT 5, (IY+d)
+  case 0x69: // BIT 5, (IY+d)
+  case 0x6A: // BIT 5, (IY+d)
+  case 0x6B: // BIT 5, (IY+d)
+  case 0x6C: // BIT 5, (IY+d)
+  case 0x6D: // BIT 5, (IY+d)
+  case 0x6E: // BIT 5, (IY+d)
+  case 0x6F: // BIT 5, (IY+d)
+    temp16 = state->iy + (int8_t)mem_read(state->pc++);
+    temp = mem_read(temp16);
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= FLAG_H;
+    if (!(temp & 0x20)) SET_FLAG(state, FLAG_Z);
+    break;
+
+  case 0x70: // BIT 6, (IY+d)
+  case 0x71: // BIT 6, (IY+d)
+  case 0x72: // BIT 6, (IY+d)
+  case 0x73: // BIT 6, (IY+d)
+  case 0x74: // BIT 6, (IY+d)
+  case 0x75: // BIT 6, (IY+d)
+  case 0x76: // BIT 6, (IY+d)
+  case 0x77: // BIT 6, (IY+d)
+    temp16 = state->iy + (int8_t)mem_read(state->pc++);
+    temp = mem_read(temp16);
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= FLAG_H;
+    if (!(temp & 0x40)) SET_FLAG(state, FLAG_Z);
+    break;
+
+  case 0x78: // BIT 7, (IY+d)
+  case 0x79: // BIT 7, (IY+d)
+  case 0x7A: // BIT 7, (IY+d)
+  case 0x7B: // BIT 7, (IY+d)
+  case 0x7C: // BIT 7, (IY+d)
+  case 0x7D: // BIT 7, (IY+d)
+    temp16 = state->iy + (int8_t)mem_read(state->pc++);
+    temp = mem_read(temp16);
+    state->f &= ~(FLAG_Z | FLAG_N | FLAG_H);
+    state->f |= FLAG_H;
+    if (!(temp & 0x80)) SET_FLAG(state, FLAG_Z);
+    break;
 
   default:
     printf("Unknown FD CB opcode: %02X\n", opcode);
