@@ -184,6 +184,20 @@ void output_port(Z80_State* state, uint8_t port, uint8_t val) {
   //printf("Port %02X: %02X\n", port, val);
 }
 
+void z80_int_reti(Z80_State* state) {
+    // Pop the PC from the stack
+    uint16_t lo = mem_read(state->sp++);
+    uint16_t hi = mem_read(state->sp++);
+    state->pc = (hi << 8) | lo;
+
+    // Reset the interrupt flag
+    state->iff1 = 0;
+    state->iff2 = 0;
+
+    // Decrement the stack pointer
+    state->sp -= 2;
+}
+
 void z80_init(Z80_State* state) {
   state->pc = 0x0000;
   state->sp = 0xFFFF;
@@ -3629,6 +3643,504 @@ int decode_ed(Z80_State* state) {
   uint8_t port;
 
   switch (opcode) {
+  case 0x40: // IN B,(C)
+    port = state->c;
+    state->b = input_port(state, port);
+    break;
+
+  case 0x41: // OUT (C),B
+    port = state->c;
+    output_port(state, port, state->b);
+    break;
+
+  case 0x42: // SBC HL,BC
+    temp16 = state->bc;
+    res = state->hl - temp16 - (state->f & FLAG_C);
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_S | FLAG_H | FLAG_PV | FLAG_N);
+    state->f |= (res & 0x100) ? FLAG_C : 0;
+    state->f |= (res == 0) ? FLAG_Z : 0;
+    state->f |= (res & 0x80) ? FLAG_S : 0;
+    state->f |= (res & 0x10) ? FLAG_H : 0;
+    state->f |= parity_table[(res & 0x7F)] ? FLAG_PV : 0;
+    state->hl = res;
+    break;
+
+  case 0x43: // LD (nnnn),BC
+    temp16 = (mem_read(state->pc++) | (mem_read(state->pc++) << 8));
+    mem_write16(temp16, state->bc);
+    break;
+
+  case 0x47: // LD I,A
+    state->i = state->a;
+    break;
+
+  case 0x48: // IN C,(C)
+    port = state->c;
+    state->c = input_port(state, port);
+    break;
+
+  case 0x49: // OUT (C),C
+    port = state->c;
+    output_port(state, port, state->c);
+    break;
+
+  case 0x4a: // ADC HL,BC
+    temp16 = state->bc;
+    res = state->hl + temp16 + (state->f & FLAG_C);
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_S | FLAG_H | FLAG_PV | FLAG_N);
+    state->f |= (res & 0x100) ? FLAG_C : 0;
+    state->f |= (res == 0) ? FLAG_Z : 0;
+    state->f |= (res & 0x80) ? FLAG_S : 0;
+    state->f |= (res & 0x10) ? FLAG_H : 0;
+    state->f |= parity_table[(res & 0x7F)] ? FLAG_PV : 0;
+    state->hl = res;
+    break;
+
+  case 0x4b: // LD BC,(nnnn)
+    temp16 = (mem_read(state->pc++) | (mem_read(state->pc++) << 8));
+    state->bc = mem_read16(temp16);
+    break;
+
+  case 0x4d: // RETI
+    z80_int_reti(state);
+    break;
+
+  case 0x4f: // LD R,A
+    state->r = state->a;
+    break;
+
+  case 0x50: // IN D,(C)
+    port = state->c;
+    state->d = input_port(state, port);
+    break;
+
+  case 0x51: // OUT (C),D
+    port = state->c;
+    output_port(state, port, state->d);
+    break;
+
+  case 0x52: // SBC HL,DE
+    temp16 = state->de;
+    res = state->hl - temp16 - (state->f & FLAG_C);
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_S | FLAG_H | FLAG_PV | FLAG_N);
+    state->f |= (res & 0x100) ? FLAG_C : 0;
+    state->f |= (res == 0) ? FLAG_Z : 0;
+    state->f |= (res & 0x80) ? FLAG_S : 0;
+    state->f |= (res & 0x10) ? FLAG_H : 0;
+    state->f |= parity_table[(res & 0x7F)] ? FLAG_PV : 0;
+    state->hl = res;
+    break;
+
+  case 0x53: // LD (nnnn),DE
+    temp16 = (mem_read(state->pc++) | (mem_read(state->pc++) << 8));
+    mem_write16(temp16, state->de);
+    break;
+
+  case 0x57: // LD A,I
+    state->a = state->i;
+    break;
+
+  case 0x58: // IN E,(C)
+    port = state->c;
+    state->e = input_port(state, port);
+    break;
+
+  case 0x59: // OUT (C),E
+    port = state->c;
+    output_port(state, port, state->e);
+    break;
+
+  case 0x5a: // ADC HL,DE
+    temp16 = state->de;
+    res = state->hl + temp16 + (state->f & FLAG_C);
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_S | FLAG_H | FLAG_PV | FLAG_N);
+    state->f |= (res & 0x100) ? FLAG_C : 0;
+    state->f |= (res == 0) ? FLAG_Z : 0;
+    state->f |= (res & 0x80) ? FLAG_S : 0;
+    state->f |= (res & 0x10) ? FLAG_H : 0;
+    state->f |= parity_table[(res & 0x7F)] ? FLAG_PV : 0;
+    state->hl = res;
+    break;
+
+  case 0x5b: // LD DE,(nnnn)
+    temp16 = (mem_read(state->pc++) | (mem_read(state->pc++) << 8));
+    state->de = mem_read16(temp16);
+    break;
+
+  case 0x5f: // LD A,R
+    state->a = state->r;
+    break;
+
+  case 0x60: // IN H,(C)
+    port = state->c;
+    state->h = input_port(state, port);
+    break;
+
+  case 0x61: // OUT (C),H
+    port = state->c;
+    output_port(state, port, state->h);
+    break;
+
+  case 0x62: // SBC HL,HL
+    res = state->hl - state->hl - (state->f & FLAG_C);
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_S | FLAG_H | FLAG_PV | FLAG_N);
+    state->f |= (res & 0x100) ? FLAG_C : 0;
+    state->f |= (res == 0) ? FLAG_Z : 0;
+    state->f |= (res & 0x80) ? FLAG_S : 0;
+    state->f |= (res & 0x10) ? FLAG_H : 0;
+    state->f |= parity_table[(res & 0x7F)] ? FLAG_PV : 0;
+    state->hl = res;
+    break;
+
+  case 0x63: // LD (nnnn),HL
+    temp16 = (mem_read(state->pc++) | (mem_read(state->pc++) << 8));
+    mem_write16(temp16, state->hl);
+    break;
+
+  case 0x67: // RRD
+    temp = (mem_read(state->hl) & 0xF0) | (state->a & 0x0F);
+    state->a = (state->a >> 4) | (mem_read(state->hl) << 4);
+    mem_write(state->hl, temp);
+    break;
+
+  case 0x68: // IN L,(C)
+    port = state->c;
+    state->l = input_port(state, port);
+    break;
+
+  case 0x69: // OUT (C),L
+    port = state->c;
+    output_port(state, port, state->l);
+    break;
+
+  case 0x6a: // ADC HL,HL
+    res = state->hl + state->hl + (state->f & FLAG_C);
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_S | FLAG_H | FLAG_PV | FLAG_N);
+    state->f |= (res & 0x100) ? FLAG_C : 0;
+    state->f |= (res == 0) ? FLAG_Z : 0;
+    state->f |= (res & 0x80) ? FLAG_S : 0;
+    state->f |= (res & 0x10) ? FLAG_H : 0;
+    state->f |= parity_table[(res & 0x7F)] ? FLAG_PV : 0;
+    state->hl = res;
+    break;
+
+  case 0x6b: // LD HL,(nnnn)
+    temp16 = (mem_read(state->pc++) | (mem_read(state->pc++) << 8));
+    state->hl = mem_read16(temp16);
+    break;
+
+  case 0x6e: // IM 0
+    state->imode = 0;
+    break;
+
+  case 0x6f: // RLD
+    temp = (mem_read(state->hl) & 0xF0) | (state->a & 0x0F);
+    state->a = (state->a >> 4) | (mem_read(state->hl) << 4);
+    mem_write(state->hl, temp);
+    break;
+
+  case 0x70: // IN F,(C)
+    port = state->c;
+    state->f = input_port(state, port);
+    break;
+
+  case 0x71: // OUT (C),0
+    port = state->c;
+    output_port(state, port, 0);
+    break;
+
+  case 0x72: // SBC HL,SP
+    res = state->hl - state->sp - (state->f & FLAG_C);
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_S | FLAG_H | FLAG_PV | FLAG_N);
+    state->f |= (res & 0x100) ? FLAG_C : 0;
+    state->f |= (res == 0) ? FLAG_Z : 0;
+    state->f |= (res & 0x80) ? FLAG_S : 0;
+    state->f |= (res & 0x10) ? FLAG_H : 0;
+    state->f |= parity_table[(res & 0x7F)] ? FLAG_PV : 0;
+    state->hl = res;
+    break;
+
+  case 0x73: // LD (nnnn),SP
+    temp16 = (mem_read(state->pc++) | (mem_read(state->pc++) << 8));
+    mem_write16(temp16, state->sp);
+    break;
+
+  case 0x76: // IM 1
+    state->imode = 1;
+    break;
+
+  case 0x78: // IN A,(C)
+    port = state->c;
+    state->a = input_port(state, port);
+    break;
+
+  case 0x79: // OUT (C),A
+    port = state->c;
+    output_port(state, port, state->a);
+    break;
+
+  case 0x7a: // ADC HL,SP
+    res = state->hl + state->sp + (state->f & FLAG_C);
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_S | FLAG_H | FLAG_PV | FLAG_N);
+    state->f |= (res & 0x100) ? FLAG_C : 0;
+    state->f |= (res == 0) ? FLAG_Z : 0;
+    state->f |= (res & 0x80) ? FLAG_S : 0;
+    state->f |= (res & 0x10) ? FLAG_H : 0;
+    state->f |= parity_table[(res & 0x7F)] ? FLAG_PV : 0;
+    state->hl = res;
+    break;
+
+  case 0x7b: // LD SP,(nnnn)
+    temp16 = (mem_read(state->pc++) | (mem_read(state->pc++) << 8));
+    state->sp = mem_read16(temp16);
+    break;
+
+  case 0x7c: // NEG
+    res = -state->a;
+    state->a = res;
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_S | FLAG_H | FLAG_PV | FLAG_N);
+    state->f |= (res == 0) ? FLAG_Z : 0;
+    state->f |= (res & 0x80) ? FLAG_S : 0;
+    state->f |= (res & 0x10) ? FLAG_H : 0;
+    state->f |= parity_table[(res & 0x7F)] ? FLAG_PV : 0;
+    state->f |= FLAG_N;
+    break;
+
+  case 0x7d: // RETN
+    temp16 = pop16(state);
+    state->pc = temp16;
+    break;
+
+  case 0x7e: // IM 2
+    state->imode = 2;
+    break;
+
+  case 0xa0: // LDI
+    temp = mem_read(state->de);
+    mem_write(state->hl, temp);
+    state->de++;
+    state->hl++;
+    state->bc--;
+    break;
+
+  case 0xa1: // CPI
+    temp = mem_read(state->hl);
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_S | FLAG_H | FLAG_PV | FLAG_N);
+    state->f |= (temp == state->a) ? FLAG_Z : 0;
+    state->f |= (temp < state->a) ? FLAG_C : 0;
+    state->f |= (temp & 0x80) ? FLAG_S : 0;
+    state->f |= (temp & 0x10) ? FLAG_H : 0;
+    state->f |= parity_table[(temp & 0x7F)] ? FLAG_PV : 0;
+    state->f |= FLAG_N; // N flag is always set
+    state->hl++;
+    state->bc--;
+    break;
+
+  case 0xa2: // INI
+    temp = mem_read(state->de);
+    mem_write(state->hl, temp);
+    state->de++;
+    state->hl++;
+    state->bc--;
+    output_port(state, 0xfe, state->c);
+    break;
+
+  case 0xa3: // OUTI
+    temp = mem_read(state->de);
+    output_port(state, 0xfe, state->c);
+    mem_write(state->hl, temp);
+    state->de++;
+    state->hl++;
+    state->bc--;
+    break;
+
+  case 0xa8: // LDD
+    temp = mem_read(state->de);
+    mem_write(state->hl, temp);
+    state->de--;
+    state->hl--;
+    state->bc--;
+    break;
+
+  case 0xa9: // CPD
+    temp = mem_read(state->hl);
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_S | FLAG_H | FLAG_PV | FLAG_N);
+    state->f |= (temp == state->a) ? FLAG_Z : 0;
+    state->f |= (temp < state->a) ? FLAG_C : 0;
+    state->f |= (temp & 0x80) ? FLAG_S : 0;
+    state->f |= (temp & 0x10) ? FLAG_H : 0;
+    state->f |= parity_table[(temp & 0x7F)] ? FLAG_PV : 0;
+    state->f |= FLAG_N; // N flag is always set
+    state->hl--;
+    state->bc--;
+    break;
+
+  case 0xaa: // IND
+    temp = mem_read(state->de);
+    mem_write(state->hl, temp);
+    state->de--;
+    state->hl--;
+    state->bc--;
+    output_port(state, 0xfe, state->c);
+    break;
+
+  case 0xab: // OUTD
+    temp = mem_read(state->de);
+    output_port(state, 0xfe, state->c);
+    mem_write(state->hl, temp);
+    state->de--;
+    state->hl--;
+    state->bc--;
+    break;
+
+  case 0xb0: // LDIR
+    temp = mem_read(state->de);
+    mem_write(state->hl, temp);
+    state->de++;
+    state->hl++;
+    state->bc--;
+    while (state->bc != 0) {
+      temp = mem_read(state->de);
+      mem_write(state->hl, temp);
+      state->de++;
+      state->hl++;
+      state->bc--;
+    }
+    break;
+
+  case 0xb1: // CPIR
+    temp = mem_read(state->hl);
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_S | FLAG_H | FLAG_PV | FLAG_N);
+    state->f |= (temp == state->a) ? FLAG_Z : 0;
+    state->f |= (temp < state->a) ? FLAG_C : 0;
+    state->f |= (temp & 0x80) ? FLAG_S : 0;
+    state->f |= (temp & 0x10) ? FLAG_H : 0;
+    state->f |= parity_table[(temp & 0x7F)] ? FLAG_PV : 0;
+    state->f |= FLAG_N; // N flag is always set
+    state->hl++;
+    state->bc--;
+    while (state->bc != 0) {
+      temp = mem_read(state->hl);
+      state->f &= ~(FLAG_C | FLAG_Z | FLAG_S | FLAG_H | FLAG_PV | FLAG_N);
+      state->f |= (temp == state->a) ? FLAG_Z : 0;
+      state->f |= (temp < state->a) ? FLAG_C : 0;
+      state->f |= (temp & 0x80) ? FLAG_S : 0;
+      state->f |= (temp & 0x10) ? FLAG_H : 0;
+      state->f |= parity_table[(temp & 0x7F)] ? FLAG_PV : 0;
+      state->f |= FLAG_N; // N flag is always set
+      state->hl++;
+      state->bc--;
+    }
+    break;
+
+  case 0xb2: // INIR
+    temp = mem_read(state->de);
+    mem_write(state->hl, temp);
+    state->de++;
+    state->hl++;
+    state->bc--;
+    output_port(state, 0xfe, state->c);
+    while (state->bc != 0) {
+      temp = mem_read(state->de);
+      mem_write(state->hl, temp);
+      state->de++;
+      state->hl++;
+      state->bc--;
+      output_port(state, 0xfe, state->c);
+    }
+    break;
+
+  case 0xb3: // OTIR
+    temp = mem_read(state->de);
+    output_port(state, 0xfe, state->c);
+    mem_write(state->hl, temp);
+    state->de++;
+    state->hl++;
+    state->bc--;
+    while (state->bc != 0) {
+      temp = mem_read(state->de);
+      output_port(state, 0xfe, state->c);
+      mem_write(state->hl, temp);
+      state->de++;
+      state->hl++;
+      state->bc--;
+    }
+    break;
+
+  case 0xb8: // LDDR
+    temp = mem_read(state->de);
+    mem_write(state->hl, temp);
+    state->de--;
+    state->hl--;
+    state->bc--;
+    while (state->bc != 0) {
+      temp = mem_read(state->de);
+      mem_write(state->hl, temp);
+      state->de--;
+      state->hl--;
+      state->bc--;
+    }
+    break;
+
+  case 0xb9: // CPDR
+    temp = mem_read(state->hl);
+    state->f &= ~(FLAG_C | FLAG_Z | FLAG_S | FLAG_H | FLAG_PV | FLAG_N);
+    state->f |= (temp == state->a) ? FLAG_Z : 0;
+    state->f |= (temp < state->a) ? FLAG_C : 0;
+    state->f |= (temp & 0x80) ? FLAG_S : 0;
+    state->f |= (temp & 0x10) ? FLAG_H : 0;
+    state->f |= parity_table[(temp & 0x7F)] ? FLAG_PV : 0;
+    state->f |= FLAG_N; // N flag is always set
+    state->hl--;
+    state->bc--;
+    while (state->bc != 0) {
+      temp = mem_read(state->hl);
+      state->f &= ~(FLAG_C | FLAG_Z | FLAG_S | FLAG_H | FLAG_PV | FLAG_N);
+      state->f |= (temp == state->a) ? FLAG_Z : 0;
+      state->f |= (temp < state->a) ? FLAG_C : 0;
+      state->f |= (temp & 0x80) ? FLAG_S : 0;
+      state->f |= (temp & 0x10) ? FLAG_H : 0;
+      state->f |= parity_table[(temp & 0x7F)] ? FLAG_PV : 0;
+      state->f |= FLAG_N; // N flag is always set
+      state->hl--;
+      state->bc--;
+    }
+    break;
+
+  case 0xba: // INDR
+    temp = mem_read(state->de);
+    mem_write(state->hl, temp);
+    state->de--;
+    state->hl--;
+    state->bc--;
+    output_port(state, 0xfe, state->c);
+    while (state->bc != 0) {
+      temp = mem_read(state->de);
+      mem_write(state->hl, temp);
+      state->de--;
+      state->hl--;
+      state->bc--;
+      output_port(state, 0xfe, state->c);
+    }
+    break;
+
+  case 0xbb: // OTDR
+    temp = mem_read(state->de);
+    output_port(state, 0xfe, state->c);
+    mem_write(state->hl, temp);
+    state->de--;
+    state->hl--;
+    state->bc--;
+    while (state->bc != 0) {
+      temp = mem_read(state->de);
+      output_port(state, 0xfe, state->c);
+      mem_write(state->hl, temp);
+      state->de--;
+      state->hl--;
+      state->bc--;
+    }
+    break;
+    
   default:
     printf("Unknown ED opcode: %02X\n", opcode);
     return 0;

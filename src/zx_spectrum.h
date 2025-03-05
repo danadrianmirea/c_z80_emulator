@@ -70,6 +70,9 @@ typedef struct {
     // R register
     uint8_t r;
 
+   // I register (Interrupt Vector Register)
+   uint8_t i;    
+
     // Control flags
     uint8_t iff1, iff2;
     uint8_t imode;
@@ -106,6 +109,7 @@ bool load_rom(const char* filename);
 bool load_z80_snapshot(const char* filename, Z80_State* state);
 uint8_t input_port(Z80_State* state, uint8_t port);
 void output_port(Z80_State* state, uint8_t port, uint8_t val);
+void z80_int_reti(Z80_State* state);
 uint8_t mem_read(uint32_t addr);
 uint16_t mem_read16(uint32_t addr);
 void mem_write(uint32_t addr, uint8_t val);
