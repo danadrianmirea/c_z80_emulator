@@ -147,7 +147,7 @@ bool load_z80_snapshot(const char* filename, Z80_State* state) {
     return true;
   }
 
-bool load_sna(const char* filename, Z80_State* state) {
+  bool load_sna(const char* filename, Z80_State* state) {
     FILE* sna_file = fopen(filename, "rb");
     if (!sna_file) {
         perror("SNA load failed");
@@ -166,28 +166,29 @@ bool load_sna(const char* filename, Z80_State* state) {
     fread(&state->ix, sizeof(uint16_t), 1, sna_file);
     fread(&state->iff1, sizeof(uint8_t), 1, sna_file);
     fread(&state->iff2, sizeof(uint8_t), 1, sna_file);
+
     uint8_t imode;
     fread(&imode, sizeof(uint8_t), 1, sna_file);
-    state->imode = imode & 0x03; // Use only the lower 2 bits for IM
+    state->imode = imode & 0x03; // IM is only 2 bits
 
     fread(&state->sp, sizeof(uint16_t), 1, sna_file);
     fread(&state->af, sizeof(uint16_t), 1, sna_file);
     fread(&state->r, sizeof(uint8_t), 1, sna_file);
 
-    // Skip 1 unused byte
-    fseek(sna_file, 1, SEEK_CUR);
-
-    fread(&state->pc, sizeof(uint16_t), 1, sna_file);
-
-    size_t bytes_read = fread(&memory[0x4000], 1, RAM_SIZE - 3, sna_file);
-    fprintf(stderr, "Read %zu bytes from SNA file\n", bytes_read);
-    if (bytes_read != RAM_SIZE - 3) {
-      fprintf(stderr, "Partial SNA read\n");
-      fclose(sna_file);
-      return false;
+    // Read RAM (48 KB from 0x4000 to 0xFFFF)
+    size_t bytes_read = fread(&memory[0x4000], 1, 0xC000, sna_file);
+    if (bytes_read != 0xC000) {
+        fprintf(stderr, "Partial SNA read: only %zu bytes read\n", bytes_read);
+        fclose(sna_file);
+        return false;
     }
 
     fclose(sna_file);
+
+    // Fix PC: it's stored at the top of the stack
+    state->pc = memory[state->sp] | (memory[state->sp + 1] << 8);
+    state->sp += 2;  // Adjust SP to pop the stored PC
+
     printf("Loaded SNA snapshot successfully\n");
     return true;
 }
