@@ -5,6 +5,11 @@
 #include <stdio.h>
 #include <time.h>
 
+#include "zx_spectrum.h"
+#include "z80.h"
+#include "loader.h"
+#include "memory.h"
+
 //#define DEBUG
 #define DEBUG_TICK_SPEED
 #define LOGGING_INTERVAL_FAST  100

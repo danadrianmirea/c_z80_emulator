@@ -1,12 +1,16 @@
 # List source files
 set(SOURCES
     z80.c
+    memory.c
+    loader.c
     main.c
 )
 
 # List header files (optional, for IDE support)
 set(HEADERS
     z80.h
+    memory.h
+    loader.h
 )
 
 # Add executable target
