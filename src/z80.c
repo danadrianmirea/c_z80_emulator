@@ -1,4 +1,4 @@
-#include "zx_spectrum.h"
+#include "z80.h"
 
 uint8_t memory[MEM_SIZE] = { 0 };
 
