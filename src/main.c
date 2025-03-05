@@ -267,7 +267,7 @@ void print_usage(const char* program_name) {
 }
 
 int main(int argc, char* argv[]) {
-  if (argc < 3) {
+  if (argc < 2) {
     print_usage(argv[0]);
     return RETCODE_INVALID_ARGUMENTS;
   }
@@ -277,8 +277,8 @@ int main(int argc, char* argv[]) {
   Z80_State z80_state;
   z80_init(&z80_state);
 
-  const char* romName = argv[1];
-  const char* snapshotName = argv[2];
+  const char* romName = "48.rom";
+  const char* snapshotName = argv[1];
 
   if (!load_rom(romName)) {
     display_cleanup();
