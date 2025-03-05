@@ -278,7 +278,7 @@ int main(int argc, char* argv[]) {
   z80_init(&z80_state);
 
   const char* romName = argv[1];
-  const char* z80SnapshotName = argv[2];
+  const char* snapshotName = argv[2];
 
   if (!load_rom(romName)) {
     display_cleanup();
@@ -286,9 +286,22 @@ int main(int argc, char* argv[]) {
     return RETCODE_ROM_LOADING_FAILED;
   }
 
-  if (!load_z80_snapshot(z80SnapshotName, &z80_state)) {
+  char* snapshotExt = strrchr(snapshotName, '.');
+  if (snapshotExt && (strcmp(snapshotExt, ".z80") == 0)) {
+    if (!load_z80_snapshot(snapshotName, &z80_state)) {
+      display_cleanup();
+      printf("Error: Unable to load Z80 Snapshot\n");
+      return RETCODE_Z80_SNAPSHOT_LOADING_FAILED;
+    }
+  } else if (snapshotExt && (strcmp(snapshotExt, ".sna") == 0)) {
+    if (!load_sna(snapshotName, &z80_state)) {
+      display_cleanup();
+      printf("Error: Unable to load SNA snapshot\n");
+      return RETCODE_Z80_SNAPSHOT_LOADING_FAILED;
+    }
+  } else {
     display_cleanup();
-    printf("Error: Unable to load Z80 Snapshot\n");
+    printf("Error: Unknown snapshot format (%s)\n", snapshotExt);
     return RETCODE_Z80_SNAPSHOT_LOADING_FAILED;
   }
 

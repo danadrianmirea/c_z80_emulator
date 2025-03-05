@@ -36,7 +36,7 @@ bool load_rom(const char* path) {
     return true;
   }
   
-  bool load_z80_snapshot(const char* filename, Z80_State* state) {
+bool load_z80_snapshot(const char* filename, Z80_State* state) {
     FILE* file = fopen(filename, "rb");
     if (!file) {
       perror("Failed to open Z80 file");
@@ -146,3 +146,47 @@ bool load_rom(const char* path) {
     printf("Successfully loaded Z80 snapshot (version %d)\n", version);
     return true;
   }
+
+bool load_sna(const char* filename, Z80_State* state) {
+    FILE* sna_file = fopen(filename, "rb");
+    if (!sna_file) {
+        perror("SNA load failed");
+        return false;
+    }
+
+    fread(&state->i, sizeof(uint8_t), 1, sna_file);
+    fread(&state->hl_, sizeof(uint16_t), 1, sna_file);
+    fread(&state->de_, sizeof(uint16_t), 1, sna_file);
+    fread(&state->bc_, sizeof(uint16_t), 1, sna_file);
+    fread(&state->af_, sizeof(uint16_t), 1, sna_file);
+    fread(&state->hl, sizeof(uint16_t), 1, sna_file);
+    fread(&state->de, sizeof(uint16_t), 1, sna_file);
+    fread(&state->bc, sizeof(uint16_t), 1, sna_file);
+    fread(&state->iy, sizeof(uint16_t), 1, sna_file);
+    fread(&state->ix, sizeof(uint16_t), 1, sna_file);
+    fread(&state->iff1, sizeof(uint8_t), 1, sna_file);
+    fread(&state->iff2, sizeof(uint8_t), 1, sna_file);
+    uint8_t imode;
+    fread(&imode, sizeof(uint8_t), 1, sna_file);
+    state->imode = imode & 0x03; // Use only the lower 2 bits for IM
+
+    fread(&state->sp, sizeof(uint16_t), 1, sna_file);
+    fread(&state->af, sizeof(uint16_t), 1, sna_file);
+    fread(&state->r, sizeof(uint8_t), 1, sna_file);
+
+    // Skip 1 unused byte
+    fseek(sna_file, 1, SEEK_CUR);
+
+    fread(&state->pc, sizeof(uint16_t), 1, sna_file);
+
+    if (fread(&memory[0x4000], 1, RAM_SIZE, sna_file) != RAM_SIZE) {
+        fprintf(stderr, "Partial SNA read\n");
+        fclose(sna_file);
+        return false;
+    }
+
+    fclose(sna_file);
+    printf("Loaded SNA snapshot successfully\n");
+    return true;
+}
+
